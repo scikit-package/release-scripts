@@ -8,8 +8,8 @@ jobs:
   tests-on-pr:
     uses: scikit-package/release-scripts/.github/workflows/_tests-on-pr.yml@{{ VERSION/v0 }}
     with:
-      project: {{ PROJECT/PROJECT_NAME }}
-      c_extension: {{ C_EXTENSION/false }}
-      headless: {{ HEADLESS/false }}
+      project: { { PROJECT/PROJECT_NAME } }
+      c_extension: { { C_EXTENSION/false } }
+      headless: { { HEADLESS/false } }
     secrets:
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

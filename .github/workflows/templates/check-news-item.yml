@@ -9,4 +9,4 @@ jobs:
   check-news-item:
     uses: scikit-package/release-scripts/.github/workflows/_check-news-item.yml@{{ VERSION/v0 }}
     with:
-      project: {{ PROJECT/PROJECT_NAME }}
+      project: { { PROJECT/PROJECT_NAME } }

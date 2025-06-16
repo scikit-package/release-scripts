@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       maintainer_github_username:
-        description: 'GitHub admin authorized for GitHub/PyPI release'
+        description: "GitHub admin authorized for GitHub/PyPI release"
         required: true
         type: string
 

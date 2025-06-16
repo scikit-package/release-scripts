@@ -4,28 +4,28 @@ on:
   workflow_call:
     inputs:
       project:
-        description: 'Name of the project to test'
-        default: 'PROJECT_NAME'
+        description: "Name of the project to test"
+        default: "PROJECT_NAME"
         required: false
         type: string
       python_version:
-        description: 'Python version for Conda environment'
+        description: "Python version for Conda environment"
         default: 3.13
         required: false
         type: number
       c_extension:
-        description: 'Whether the project has a C extension'
+        description: "Whether the project has a C extension"
         default: false
         required: false
         type: boolean
       headless:
-        description: 'Whether to run headless tests'
+        description: "Whether to run headless tests"
         default: false
         required: false
         type: boolean
     secrets:
       CODECOV_TOKEN:
-        description: 'Codecov token'
+        description: "Codecov token"
         required: true
 
 jobs:

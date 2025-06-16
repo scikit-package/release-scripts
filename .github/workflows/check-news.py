@@ -1,6 +1,7 @@
 """Check if the PR has a news item.
 
-Put a warning comment and return `assert False` if the PR does not contain a news file.
+Put a warning comment and return `assert False` if the PR does not
+contain a news file.
 """
 
 import os
@@ -18,14 +19,19 @@ def get_added_files(pr: PullRequest.PullRequest):
 
 def check_news_file(pr):
     return any(
-        map(lambda file_name: fnmatch(file_name, "news/*.rst"), get_added_files(pr))
+        map(
+            lambda file_name: fnmatch(file_name, "news/*.rst"),
+            get_added_files(pr),
+        )
     )
 
 
 def get_pr_number():
     number = os.environ["PR_NUMBER"]
     if not number:
-        raise Exception(f"Pull request number is not found `PR_NUMBER={number}")
+        raise Exception(
+            f"Pull request number is not found `PR_NUMBER={number}"
+        )
     return int(number)
 
 

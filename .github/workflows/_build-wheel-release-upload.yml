@@ -4,12 +4,12 @@ on:
   workflow_call:
     inputs:
       project:
-        description: 'Name of the project to build and release'
-        default: 'PROJECT_NAME'
+        description: "Name of the project to build and release"
+        default: "PROJECT_NAME"
         required: false
         type: string
       c_extension:
-        description: 'Whether the project has a C extension'
+        description: "Whether the project has a C extension"
         default: false
         required: false
         type: boolean
@@ -19,10 +19,10 @@ on:
         type: string
     secrets:
       PYPI_TOKEN:
-        description: 'PyPI token'
+        description: "PyPI token"
         required: true
       PAT_TOKEN:
-        description: 'GitHub Personal Access Token'
+        description: "GitHub Personal Access Token"
         required: true
 
 jobs:
@@ -158,7 +158,7 @@ jobs:
   pypi-publish:
     needs: [github-pre-release, github-release]
     runs-on: ubuntu-latest
-    if: always()  # This job will always initiate regardless of the success or failure of the needed jobs
+    if: always() # This job will always initiate regardless of the success or failure of the needed jobs
     steps:
       - name: Fail pypi-publish job if github-(pre)-release job failed
         run: |
@@ -171,14 +171,14 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          pattern: '**/*' # Make sure all files are downloaded, including wheels
+          pattern: "**/*" # Make sure all files are downloaded, including wheels
           path: dist
           merge-multiple: true
 
       - name: Setup Python for PyPI upload
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: "3.13"
 
       - name: Install Twine
         run: |

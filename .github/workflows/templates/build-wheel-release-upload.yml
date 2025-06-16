@@ -10,9 +10,9 @@ jobs:
   release:
     uses: scikit-package/release-scripts/.github/workflows/_build-wheel-release-upload.yml@{{ VERSION/v0 }}
     with:
-      project: {{ PROJECT/PROJECT_NAME }}
-      c_extension: {{ C_EXTENSION/false }}
-      maintainer_GITHUB_username: {{ MAINTAINER_GITHUB_USERNAME/username }}
+      project: { { PROJECT/PROJECT_NAME } }
+      c_extension: { { C_EXTENSION/false } }
+      maintainer_GITHUB_username: { { MAINTAINER_GITHUB_USERNAME/username } }
     secrets:
       PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
       PAT_TOKEN: ${{ secrets.PAT_TOKEN }}

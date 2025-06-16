@@ -4,7 +4,7 @@ on:
   workflow_call:
     inputs:
       python_version:
-        description: 'Python version for Conda environment'
+        description: "Python version for Conda environment"
         default: 3.13
         required: false
         type: number
