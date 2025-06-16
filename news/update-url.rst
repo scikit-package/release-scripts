@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* Modifiy Billingegroup/release-scripts to scikit-package-scripts in URLs as the repository has been migrated.
+* Modify Billingegroup/release-scripts to scikit-package-scripts in URLs as the repository has been migrated.
 
 **Deprecated:**
 
