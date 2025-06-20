@@ -20,7 +20,7 @@ jobs:
 
 
   update-changelog:
-    uses: ./.github/workflows/_update_changelog.yml
+    uses: ./.github/workflows/snippets/_update_changelog.yml
     needs: [tag-privilege-check]
     if: "always() && !contains(github.ref, 'rc')"
 
