@@ -21,28 +21,8 @@ jobs:
 
   update-changelog:
     needs: [tag-privilege-check]
-    # The always() function is necessary to ensure that we wait for both build jobs to complete, even if one of them is skipped.
-    # Without always(), if one of the needed jobs is skipped, the `update-changelog` job will not be executed.
     if: "always() && !contains(github.ref, 'rc')"
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout the repository
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.ref }}
-          token: ${{ secrets.PAT_TOKEN }}
-
-      - name: Update CHANGELOG.rst with the latest news
-        run: |
-          wget https://raw.githubusercontent.com/scikit-package/release-scripts/v0/.github/workflows/update-changelog.py
-          python update-changelog.py "${{ github.ref_name }}"
-          rm update-changelog.py
-
-      - name: Commit the changes in CHANGELOG.rst
-        uses: stefanzweifel/git-auto-commit-action@v5
-        with:
-          commit_message: update changelog
-          branch: main
+      uses: ./.github/workflows/snippets/_update_changelog.yml
 
   delete-create-new-tag:
     # Please see the comments provided in _build-whel-release-upload.yml
