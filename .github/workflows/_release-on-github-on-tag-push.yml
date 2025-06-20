@@ -28,19 +28,21 @@ jobs:
   delete-create-new-tag:
     # Please see the comments provided in _build-whel-release-upload.yml
     if: "always() && !contains(github.ref, 'rc')"
+    needs: [update-changelog]
     uses: ./.github/workflows/_delete_create_tag.yml
     with:
       update_changelog_result: ${{ needs.update-changelog.result }}
-    needs: [update-changelog]
 
   github-pre-release:
     if: "always() && contains(github.ref, 'rc')"
-    uses: ./.github/workflows/_github_pre_release.yml
     needs: [tag-privilege-check]
+    uses: ./.github/workflows/_github_pre_release.yml
+
 
   github-release:
     if: "always() && !contains(github.ref, 'rc')"
+    needs: [delete-create-new-tag]
     uses: ./.github/workflows/_github_release.yml
     with:
       delete-create-new-tag-result: ${{ needs.delete-create-new-tag.result }}
-    needs: [delete-create-new-tag]
+
