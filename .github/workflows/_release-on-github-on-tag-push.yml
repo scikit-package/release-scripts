@@ -18,39 +18,18 @@ jobs:
     with:
       maintainer_github_username: ${{ inputs.maintainer_github_username }}
 
-
   update-changelog:
-    uses: ./.github/workflows/snippets/_update_changelog.yml
+    uses: ./.github/workflows/_update_changelog.yml
     needs: [tag-privilege-check]
     if: "always() && !contains(github.ref, 'rc')"
 
   delete-create-new-tag:
     # Please see the comments provided in _build-whel-release-upload.yml
+    uses: ./.github/workflows/_delete
     needs: [update-changelog]
     if: "always() && !contains(github.ref, 'rc')"
-    runs-on: ubuntu-latest
-    steps:
-      - name: Fail delete-create-new-tag job if CHANGELOG update failed
-        run: |
-          if [ "${{ needs.update-changelog.result }}" == 'success' ]; then
-            echo "Ready to delete and create new tag containing the latest CHANGELOG.rst update in the main branch..."
-          else
-            echo "Previous update-changelog job failed; exiting..."
-            exit 1
-          fi
-      - name: Checkout the repository
-        uses: actions/checkout@v4
-        with:
-          ref: main
-      - name: Delete the tag
-        run: |
-          git fetch --tags
-          git tag -d "${{ github.ref_name }}"
-          git push origin ":${{ github.ref_name }}"
-      - name: Create a new tag (Expect commit SHA to match with that of main branch)
-        run: |
-          git tag "${{ github.ref_name }}"
-          git push origin "${{ github.ref_name }}"
+    with:
+      update_changelog_result: ${{ needs.update-changelog.result }}
 
   github-pre-release:
     needs: [tag-privilege-check]
