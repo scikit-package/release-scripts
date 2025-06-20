@@ -33,4 +33,3 @@ jobs:
         with:
           body_path: CHANGELOG.txt
           token: ${{ secrets.GITHUB_TOKEN }}
-          draft: true
