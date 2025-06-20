@@ -1,0 +1,113 @@
+name: Release on GitHub with tag pushed to remote repository
+
+on:
+  workflow_call:
+    inputs:
+      maintainer_github_username:
+        description: GitHub username authorized to start GitHub/PyPI release'
+        required: true
+        type: string
+    secrets:
+      PAT_TOKEN:
+        description: 'GitHub Personal Access Token'
+        required: true
+
+jobs:
+  tag-privilege-check:
+    uses: ./.github/workflows/_release_tag_privilege_check.yml
+    with:
+      maintainer_github_username: ${{ inputs.maintainer_github_username }}
+
+
+  update-changelog:
+    needs: [tag-privilege-check]
+    # The always() function is necessary to ensure that we wait for both build jobs to complete, even if one of them is skipped.
+    # Without always(), if one of the needed jobs is skipped, the `update-changelog` job will not be executed.
+    if: "always() && !contains(github.ref, 'rc')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+          token: ${{ secrets.PAT_TOKEN }}
+
+      - name: Update CHANGELOG.rst with the latest news
+        run: |
+          wget https://raw.githubusercontent.com/scikit-package/release-scripts/v0/.github/workflows/update-changelog.py
+          python update-changelog.py "${{ github.ref_name }}"
+          rm update-changelog.py
+
+      - name: Commit the changes in CHANGELOG.rst
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: update changelog
+          branch: main
+
+  delete-create-new-tag:
+    # Please see the comments provided in _build-whel-release-upload.yml
+    needs: [update-changelog]
+    if: "always() && !contains(github.ref, 'rc')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail delete-create-new-tag job if CHANGELOG update failed
+        run: |
+          if [ "${{ needs.update-changelog.result }}" == 'success' ]; then
+            echo "Ready to delete and create new tag containing the latest CHANGELOG.rst update in the main branch..."
+          else
+            echo "Previous update-changelog job failed; exiting..."
+            exit 1
+          fi
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Delete the tag
+        run: |
+          git fetch --tags
+          git tag -d "${{ github.ref_name }}"
+          git push origin ":${{ github.ref_name }}"
+      - name: Create a new tag (Expect commit SHA to match with that of main branch)
+        run: |
+          git tag "${{ github.ref_name }}"
+          git push origin "${{ github.ref_name }}"
+
+  github-pre-release:
+    needs: [tag-privilege-check]
+    if: "always() && contains(github.ref, 'rc')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate GH release notes for pre-release
+        uses: softprops/action-gh-release@v2
+        with:
+          prerelease: true
+          generate_release_notes: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  github-release:
+    needs: [delete-create-new-tag]
+    if: "always() && !contains(github.ref, 'rc')"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail github-release job if CHANGELOG update failed
+        run: |
+          if [ "${{ needs.delete-create-new-tag.result }}" == 'success' ]; then
+            echo "Ready to release on GitHub..."
+          else
+            echo "Previous update-changelog job failed; exiting..."
+            exit 1
+          fi
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Generate GH release notes for release
+        run: |
+          wget https://raw.githubusercontent.com/scikit-package/release-scripts/v0/.github/workflows/get-latest-changelog.py
+          python get-latest-changelog.py "${{ github.ref_name }}"
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          body_path: CHANGELOG.txt
+          token: ${{ secrets.GITHUB_TOKEN }}
+
