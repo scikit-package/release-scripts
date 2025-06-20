@@ -2,6 +2,10 @@ name: Compile news items into CHANGELOG.rst
 
 on:
   workflow_call:
+    secrets:
+      PAT_TOKEN:
+        description: 'GitHub Personal Access Token'
+        required: true
 
 jobs:
   update-changelog:
