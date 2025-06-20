@@ -20,9 +20,9 @@ jobs:
 
 
   update-changelog:
+    uses: ./.github/workflows/snippets/_update_changelog.yml
     needs: [tag-privilege-check]
     if: "always() && !contains(github.ref, 'rc')"
-    uses: ./.github/workflows/snippets/_update_changelog.yml
 
   delete-create-new-tag:
     # Please see the comments provided in _build-whel-release-upload.yml
