@@ -20,6 +20,8 @@ jobs:
 
   update-changelog:
     uses: ./.github/workflows/_update_changelog.yml
+    with:
+      PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
     needs: [tag-privilege-check]
     if: "always() && !contains(github.ref, 'rc')"
 
