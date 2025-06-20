@@ -44,6 +44,3 @@ jobs:
     with:
       delete-create-new-tag-result: ${{ needs.delete-create-new-tag.result }}
     needs: [delete-create-new-tag]
-
-
-
