@@ -25,7 +25,7 @@ jobs:
 
   delete-create-new-tag:
     # Please see the comments provided in _build-whel-release-upload.yml
-    uses: ./.github/workflows/_delete
+    uses: ./.github/workflows/_delete_create_tag.yml
     needs: [update-changelog]
     if: "always() && !contains(github.ref, 'rc')"
     with:
