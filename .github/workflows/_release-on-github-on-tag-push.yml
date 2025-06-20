@@ -20,10 +20,10 @@ jobs:
 
   update-changelog:
     if: "always() && !contains(github.ref, 'rc')"
+    needs: [tag-privilege-check]
     uses: ./.github/workflows/_update_changelog.yml
     secrets:
       PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
-    needs: [tag-privilege-check]
 
   delete-create-new-tag:
     # Please see the comments provided in _build-whel-release-upload.yml
@@ -45,4 +45,3 @@ jobs:
     uses: ./.github/workflows/_github_release.yml
     with:
       delete-create-new-tag-result: ${{ needs.delete-create-new-tag.result }}
-
