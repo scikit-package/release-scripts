@@ -14,7 +14,7 @@ jobs:
     steps:
       - name: Fail delete-create-new-tag job if CHANGELOG update failed
         run: |
-          if [ "${{ update_changelog_result }}" == 'success' ]; then
+          if [ "${{ inputs.update_changelog_result }}" == 'success' ]; then
             echo "Ready to delete and create new tag containing the latest CHANGELOG.rst update in the main branch..."
           else
             echo "Previous update-changelog job failed; exiting..."
