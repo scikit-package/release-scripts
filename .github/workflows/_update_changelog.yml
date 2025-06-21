@@ -1,0 +1,30 @@
+name: Compile news items into CHANGELOG.rst
+
+on:
+  workflow_call:
+    secrets:
+      PAT_TOKEN:
+        description: 'GitHub Personal Access Token'
+        required: true
+
+jobs:
+  update-changelog:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+          token: ${{ secrets.PAT_TOKEN }}
+
+      - name: Update CHANGELOG.rst with the latest news
+        run: |
+          wget https://raw.githubusercontent.com/scikit-package/release-scripts/v0/.github/workflows/update-changelog.py
+          python update-changelog.py "${{ github.ref_name }}"
+          rm update-changelog.py
+
+      - name: Commit the changes in CHANGELOG.rst
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: update changelog
+          branch: main
