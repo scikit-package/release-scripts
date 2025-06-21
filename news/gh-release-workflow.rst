@@ -1,10 +1,10 @@
 **Added:**
 
-* <news item>
+* Author _release-on-github-on-tag-push.yml to release on GitHub with tag push.
 
 **Changed:**
 
-* Modify Billingegroup/release-scripts to scikit-package-scripts in URLs as the repository has been migrated.
+* <news item>
 
 **Deprecated:**
 

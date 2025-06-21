@@ -1,0 +1,47 @@
+name: Release on GitHub with tag pushed to remote repository
+
+on:
+  workflow_call:
+    inputs:
+      maintainer_github_username:
+        description: GitHub username authorized to start GitHub/PyPI release'
+        required: true
+        type: string
+    secrets:
+      PAT_TOKEN:
+        description: 'GitHub Personal Access Token'
+        required: true
+
+jobs:
+  tag-privilege-check:
+    uses: ./.github/workflows/_release_tag_privilege_check.yml
+    with:
+      maintainer_github_username: ${{ inputs.maintainer_github_username }}
+
+  update-changelog:
+    if: "always() && !contains(github.ref, 'rc')"
+    needs: [tag-privilege-check]
+    uses: ./.github/workflows/_update_changelog.yml
+    secrets:
+      PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+
+  delete-create-new-tag:
+    # Please see the comments provided in _build-whel-release-upload.yml
+    if: "always() && !contains(github.ref, 'rc')"
+    needs: [update-changelog]
+    uses: ./.github/workflows/_delete_create_tag.yml
+    with:
+      update_changelog_result: ${{ needs.update-changelog.result }}
+
+  github-pre-release:
+    if: "always() && contains(github.ref, 'rc')"
+    needs: [tag-privilege-check]
+    uses: ./.github/workflows/_github_pre_release.yml
+
+
+  github-release:
+    if: "always() && !contains(github.ref, 'rc')"
+    needs: [delete-create-new-tag]
+    uses: ./.github/workflows/_github_release.yml
+    with:
+      delete-create-new-tag-result: ${{ needs.delete-create-new-tag.result }}
