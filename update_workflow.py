@@ -1,17 +1,18 @@
 #!/usr/bin/env python
 
-"""
-This script fetches the latest workflows from the central repository 'release-scripts'
-and updates the local dummy workflows. Before running the script, install the required
-packages using the following command:
+"""This script fetches the latest workflows from the central repository
+'release-scripts' and updates the local dummy workflows. Before running
+the script, install the required packages using the following command:
 
-    conda install requests
+conda install requests
 
-This script assumes the package repository has the same parent directory as 'release-scripts'.
-You can change this by modifying the 'LOCAL_WORKFLOW_DIR' variable.
+This script assumes the package repository has the same parent directory
+as 'release-scripts'. You can change this by modifying the
+'LOCAL_WORKFLOW_DIR' variable.
 
-Sometimes there would be timeout errors while fetching the workflows from the central repository.
-In such cases, you can try running the script again.
+Sometimes there would be timeout errors while fetching the workflows
+from the central repository. In such cases, you can try running the
+script again.
 """
 
 import os
@@ -42,7 +43,9 @@ def get_central_workflows():
     )
     response = requests.get(base_url, timeout=5)
     if response.status_code != 200:
-        raise Exception(f"Failed to fetch central workflows: {response.status_code}")
+        raise Exception(
+            f"Failed to fetch central workflows: {response.status_code}"
+        )
 
     workflows = {}
     for file in response.json():
@@ -77,7 +80,9 @@ def update_workflow_params(content):
         key = match.group(1)
         default_value = match.group(2)
         if key not in user_input_cache:
-            user_value = get_user_input(f"Enter value for '{key}'", default_value, key)
+            user_value = get_user_input(
+                f"Enter value for '{key}'", default_value, key
+            )
             user_input_cache[key] = user_value
         return str(user_input_cache[key])
 

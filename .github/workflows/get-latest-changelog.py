@@ -3,7 +3,8 @@ import sys
 
 
 def get_tag_news_items(tag, filepath):
-    """Collect news items after the specified tag until the next version is found."""
+    """Collect news items after the specified tag until the next version
+    is found."""
     collect = False
     collected_lines = []
     # Regex to match version numbers
@@ -46,7 +47,8 @@ if __name__ == "__main__":
     if len(sys.argv) < 2:
         assert (
             False
-        ), "No tag has been provided. Please provide a tag by running python get-latest-changelog.py <tag>"
+        ), "No tag has been provided. Please provide a tag by running "
+        "python get-latest-changelog.py <tag>"
 
     tag = sys.argv[1]
     CHANGELOG_PATH = "CHANGELOG.rst"
@@ -54,5 +56,7 @@ if __name__ == "__main__":
 
     collected_lines = get_tag_news_items(tag, CHANGELOG_PATH)
     cleaned_lines = remove_two_lines(collected_lines)
-    latest_changelog_output = save_to_txt_file(cleaned_lines, LATEST_CHANGELOG_PATH)
+    latest_changelog_output = save_to_txt_file(
+        cleaned_lines, LATEST_CHANGELOG_PATH
+    )
     print(f"CHANGELOG for {tag}:\n{latest_changelog_output}")

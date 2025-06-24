@@ -17,7 +17,8 @@ news_items = {
 
 
 def extract_news_items(file_path):
-    """Extract news bullet points under each category for each .rst file."""
+    """Extract news bullet points under each category for each .rst
+    file."""
     with open(file_path, "r") as file:
         for line in file:
             line = line.strip()
@@ -31,12 +32,19 @@ def extract_news_items(file_path):
                 current_category = line.strip("**:").strip()
 
             # Only add if the line is not empty and not a category header
-            elif current_category and line and not line.startswith("* <news item>"):
+            elif (
+                current_category
+                and line
+                and not line.startswith("* <news item>")
+            ):
                 news_items[current_category].append(line)
 
 
 def write_merged_file():
-    """Add the news items under the ".. current developments" section."""
+    """Add the news items under the "..
+
+    current developments" section.
+    """
     CHANGELOG_PATH = "CHANGELOG.rst"
     CHANGELOG_HEADER = ".. current developments"
 
@@ -57,7 +65,9 @@ def write_merged_file():
         current_content = file.read()
 
     # Find the position to insert news after ".. current developments"
-    insert_position = current_content.find(CHANGELOG_HEADER) + len(CHANGELOG_HEADER) + 1
+    insert_position = (
+        current_content.find(CHANGELOG_HEADER) + len(CHANGELOG_HEADER) + 1
+    )
     final_content = (
         current_content[:insert_position]
         + new_news_content
@@ -72,7 +82,7 @@ def write_merged_file():
 
 
 def remove_news_rst_files(news_dir_path):
-    """Remove .rst files in the news directory except TEMPLATE.rst"""
+    """Remove .rst files in the news directory except TEMPLATE.rst."""
     rst_files = os.listdir(news_dir_path)
     for file_name in rst_files:
         rst_file_path = os.path.join(news_dir_path, file_name)
