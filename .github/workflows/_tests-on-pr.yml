@@ -23,6 +23,11 @@ on:
         default: false
         required: false
         type: boolean
+      run:
+        description: 'Extra CLI commands to run after installing the project'
+        default: 'echo "No extra commands"'
+        required: false
+        type: string
     secrets:
       CODECOV_TOKEN:
         description: 'Codecov token'
@@ -61,6 +66,11 @@ jobs:
             conda install --file requirements/build.txt
           fi
           python -m pip install . --no-deps
+
+      - name: Run extra user-defined CLI commands
+        run: |
+          echo "${{ inputs.run }}" > user-commands.sh
+          bash user-commands.sh
 
       - name: Start Xvfb
         if: ${{ inputs.headless }}
