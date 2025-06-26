@@ -67,7 +67,7 @@ jobs:
           fi
           python -m pip install . --no-deps
 
-      - name: Run extra user CLI commands
+      - name: Run extra user-defined CLI commands
         run: |
           echo "${{ inputs.run }}" > user-commands.sh
           bash user-commands.sh
