@@ -38,7 +38,7 @@ jobs:
 
   build-non-pure-python-package:
     needs: [tag-privilege-check]
-    if: inputs.project == 'diffpy.pdffit2'
+    if: inputs.project == 'diffpy.pdffit2' || inputs.project == 'diffpy.srreal'
     uses: ./.github/workflows/_build-pdffit2-package.yml
 
   update-changelog:
