@@ -8,6 +8,11 @@ on:
         default: 3.13
         required: false
         type: number
+      run:
+        description: 'Extra CLI commands to run after installing the project'
+        default: 'echo "No extra commands"'
+        required: false
+        type: string
 
 jobs:
   validate:
@@ -39,6 +44,11 @@ jobs:
           conda install --file requirements/conda.txt
           conda install --file requirements/test.txt
           python -m pip install . --no-deps
+
+      - name: Run extra user-defined CLI commands
+        run: |
+          echo "${{ inputs.run }}" > user-commands.sh
+          bash user-commands.sh
 
       - name: Run unit tests
         run: |
