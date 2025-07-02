@@ -70,10 +70,10 @@ jobs:
           Xvfb :99 -screen 0 1024x768x16 &
 
       - name: build documents
-        run: make -C doc html
+        run: make -C docs html
 
       - name: Deploy
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./doc/build/html
+          publish_dir: ./docs/build/html
