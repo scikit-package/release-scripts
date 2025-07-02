@@ -42,7 +42,7 @@ jobs:
       - name: Install package and requirements
         run: |
           conda install --file requirements/conda.txt
-          conda install --file requirements/test.txt
+          conda install --file requirements/tests.txt
           python -m pip install . --no-deps
 
       - name: Run extra user-defined CLI commands
