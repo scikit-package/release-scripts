@@ -72,7 +72,7 @@ jobs:
       - name: Install ${{ inputs.project }} and requirements
         run: |
           conda install --file requirements/conda.txt
-          conda install --file requirements/test.txt
+          conda install --file requirements/tests.txt
           if ${{ inputs.c_extension }}; then
             conda install --file requirements/build.txt
           fi
