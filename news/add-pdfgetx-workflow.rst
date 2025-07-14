@@ -4,7 +4,7 @@
 
 **Changed:**
 
-* Create chained workflows for tests-on-pr.yml that calls tests-on-r-no-codecov.yml and upload-to-codecov.yml
+* <news item>
 
 **Deprecated:**
 

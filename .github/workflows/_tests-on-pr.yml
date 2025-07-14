@@ -34,17 +34,63 @@ on:
         required: true
 
 jobs:
-  run-tests:
-    uses: scikit-package/release-scripts/.github/workflows/_tests-on-pr-no-codecov.yml@v0
-    with:
-      project: ${{ inputs.project }}
-      python_version: ${{ inputs.python_version }}
-      c_extension: ${{ inputs.c_extension }}
-      headless: ${{ inputs.headless }}
-      run: ${{ inputs.run }}
+  validate:
+    defaults:
+      run:
+        shell: bash -l {0}
 
-  upload-codecov:
-    needs: [run-tests]
-    uses: scikit-package/release-scripts/.github/workflows/_upload-to-codecov.yml@v0
-    secrets:
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out ${{ inputs.project }}
+        uses: actions/checkout@v4
+
+      - name: Initialize miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: test
+          channels: conda-forge
+          auto-update-conda: true
+          auto-activate-base: false
+          python-version: ${{ inputs.python_version }}
+
+      - name: Conda config
+        run: >-
+          conda config --set always_yes yes
+          --set changeps1 no
+
+      - name: Install ${{ inputs.project }} and requirements
+        run: |
+          conda install --file requirements/conda.txt
+          conda install --file requirements/tests.txt
+          if ${{ inputs.c_extension }}; then
+            conda install --file requirements/build.txt
+          fi
+          python -m pip install . --no-deps
+
+      - name: Run extra user-defined CLI commands
+        run: |
+          echo "${{ inputs.run }}" > user-commands.sh
+          bash user-commands.sh
+
+      - name: Start Xvfb
+        if: ${{ inputs.headless }}
+        run: |
+          sudo apt-get install -y xvfb
+          export DISPLAY=:99
+          Xvfb :99 -screen 0 1024x768x16 &
+
+      - name: Validate ${{ inputs.project }}
+        run: |
+          if ${{ inputs.headless }}; then
+            export DISPLAY=:99
+          fi
+          pytest --cov
+          coverage report -m
+          codecov
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          verbose: true
+          fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
