@@ -1,0 +1,85 @@
+name: Tests on PR
+
+on:
+  workflow_call:
+    inputs:
+      project:
+        description: 'Name of the project to test'
+        default: 'PROJECT_NAME'
+        required: false
+        type: string
+      python_version:
+        description: 'Python version for Conda environment'
+        default: 3.13
+        required: false
+        type: number
+      c_extension:
+        description: 'Whether the project has a C extension'
+        default: false
+        required: false
+        type: boolean
+      headless:
+        description: 'Whether to run headless tests'
+        default: false
+        required: false
+        type: boolean
+      run:
+        description: 'Extra CLI commands to run after installing the project'
+        default: 'echo "No extra commands"'
+        required: false
+        type: string
+
+jobs:
+  validate:
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out ${{ inputs.project }}
+        uses: actions/checkout@v4
+
+      - name: Initialize miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: test
+          channels: conda-forge
+          auto-update-conda: true
+          auto-activate-base: false
+          python-version: ${{ inputs.python_version }}
+
+      - name: Conda config
+        run: >-
+          conda config --set always_yes yes
+          --set changeps1 no
+
+      - name: Install ${{ inputs.project }} and requirements
+        run: |
+          conda install --file requirements/conda.txt
+          conda install --file requirements/tests.txt
+          if ${{ inputs.c_extension }}; then
+            conda install --file requirements/build.txt
+          fi
+          python -m pip install . --no-deps
+
+      - name: Run extra user-defined CLI commands
+        run: |
+          echo "${{ inputs.run }}" > user-commands.sh
+          bash user-commands.sh
+
+      - name: Start Xvfb
+        if: ${{ inputs.headless }}
+        run: |
+          sudo apt-get install -y xvfb
+          export DISPLAY=:99
+          Xvfb :99 -screen 0 1024x768x16 &
+
+      - name: Validate ${{ inputs.project }}
+        run: |
+          if ${{ inputs.headless }}; then
+            export DISPLAY=:99
+          fi
+          pytest --cov
+          coverage report -m
+          codecov
