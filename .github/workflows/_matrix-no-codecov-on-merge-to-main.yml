@@ -1,0 +1,96 @@
+name: CI
+
+on:
+  workflow_call:
+    inputs:
+      project:
+        description: 'Name of the project to test'
+        default: 'PROJECT_NAME'
+        required: false
+        type: string
+      python_versions:
+          description: 'Comma-separated list of Python versions to test within matrix CI, e.g., "3.11, 3.12"'
+          default: "3.11, 3.12, 3.13"
+          required: false
+          type: string
+      c_extension:
+        description: 'Whether the project has a C extension'
+        default: false
+        required: false
+        type: boolean
+      headless:
+        description: 'Whether to run headless tests'
+        default: false
+        required: false
+        type: boolean
+      run:
+        description: 'Extra CLI commands to run after installing the project'
+        default: 'echo "No extra commands"'
+        required: false
+        type: string
+
+jobs:
+  coverage:
+    defaults:
+      run:
+        shell: bash -l {0}
+
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
+        python-version: ${{ fromJson(format('[{0}]', inputs.python_versions)) }}
+    steps:
+      - name: Get the latest Python version from the matrix
+        id: get_latest_python
+        run: |
+          IFS=',' read -ra ADDR <<< "${{ inputs.python_versions }}"
+          echo "::set-output name=latest_python_version::${ADDR[-1]}"
+
+      - name: Check out ${{ inputs.project }}
+        uses: actions/checkout@v4
+
+      - name: Initialize miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: test
+          channels: conda-forge
+          auto-update-conda: true
+          auto-activate-base: false
+          python-version: ${{ matrix.python-version }}
+
+      - name: Conda config
+        run: >-
+          conda config --set always_yes yes
+          --set changeps1 no
+
+      - name: Install ${{ inputs.project }} and requirements
+        run: |
+          conda install --file requirements/conda.txt
+          conda install --file requirements/tests.txt
+          if ${{ inputs.c_extension }}; then
+            conda install --file requirements/build.txt
+          fi
+          python -m pip install . --no-deps
+
+      - name: Run extra user-defined CLI commands
+        run: |
+          echo "${{ inputs.run }}" > user-commands.sh
+          bash user-commands.sh
+
+      - name: Start Xvfb for ubuntu-latest only
+        if: matrix.os == 'ubuntu-latest' && inputs.headless
+        run: |
+          sudo apt-get install -y xvfb
+          export DISPLAY=:99
+          Xvfb :99 -screen 0 1024x768x16 &
+
+      - name: Validate ${{ inputs.project }}
+        run: |
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" && "${{ inputs.headless }}" == "true" ]]; then
+            export DISPLAY=:99
+          fi
+          pytest --cov
+          coverage report -m
+          codecov
