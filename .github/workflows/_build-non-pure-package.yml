@@ -8,7 +8,7 @@ jobs:
     defaults:
         run:
           shell: bash -l {0}
-  
+
     name: Build sdist
     runs-on: ubuntu-latest
     steps:
@@ -23,12 +23,12 @@ jobs:
           auto-update-conda: true
           auto-activate-base: false
           python-version: 3.13
-      
+
       - name: Conda config
         run: >-
           conda config --set always_yes yes
           --set changeps1 no
-      
+
       - name: Build sdist
         run: |
           pip install --upgrade build
@@ -121,7 +121,7 @@ jobs:
         with:
           name: ${{ matrix.python }}-${{ matrix.buildplat }}.whl
           path: ./dist
-      
+
       - name: Initialize miniconda
         uses: conda-incubator/setup-miniconda@v3
         with:
