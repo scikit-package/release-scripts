@@ -31,6 +31,7 @@ jobs:
 
       - name: Build sdist
         run: |
+          conda install --file requirements/conda.txt
           pip install --upgrade build
           python -m build --sdist
 
