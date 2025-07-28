@@ -38,8 +38,8 @@ jobs:
 
   build-non-pure-python-package:
     needs: [tag-privilege-check]
-    if: inputs.project == 'diffpy.pdffit2' || inputs.project == 'diffpy.srreal' || inputs.project == 'pyobjcryst'
-    uses: ./.github/workflows/_build-pdffit2-package.yml
+    if: inputs.c_extension
+    uses: ./.github/workflows/_build-non-pure-package.yml
 
   update-changelog:
     # The always() function is necessary to ensure that we wait for both build jobs to complete, even if one of them is skipped.
