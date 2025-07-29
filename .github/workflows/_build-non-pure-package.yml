@@ -84,8 +84,8 @@ jobs:
           conda install --file requirements/conda.txt
           conda install --file requirements/pip.txt
           pip install --upgrade build
-          
-      
+
+
       - name: Build and repair wheels
         run: |
           python -m pip wheel --no-deps --wheel-dir ./dist .
