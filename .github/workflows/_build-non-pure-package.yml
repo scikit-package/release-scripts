@@ -91,7 +91,7 @@ jobs:
           conda install --file requirements/pip.txt
           pip install --upgrade build
           python -m pip wheel --no-deps --wheel-dir ./dist .
-      
+
       - name: Repair wheels
         if: matrix.buildplat == 'ubuntu-latest'
         run: |
