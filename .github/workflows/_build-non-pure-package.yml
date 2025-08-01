@@ -2,6 +2,12 @@ name: Build wheel and sdist for a non-pure Python package
 
 on:
   workflow_call:
+    inputs:
+      project:
+        description: 'Name of the project to build'
+        default: 'PROJECT_NAME'
+        required: true
+        type: string
 
 jobs:
   build_sdist:
@@ -79,21 +85,66 @@ jobs:
           conda config --set always_yes yes
           --set changeps1 no
 
-      - name: Install requirements
+      - name: Install requirements and build wheels
         run: |
           conda install --file requirements/conda.txt
           conda install --file requirements/pip.txt
           pip install --upgrade build
-
-
-      - name: Build and repair wheels
-        run: |
           python -m pip wheel --no-deps --wheel-dir ./dist .
-          if [[ "${{ matrix.buildplat }}" == "ubuntu-latest" ]]; then
-            conda install auditwheel patchelf
-            LD_LIBRARY_PATH=$CONDA_PREFIX/lib auditwheel repair dist/*.whl -w dist/
-            rm dist/*-linux_*.whl
-          fi
+
+      - name: Repair wheels
+        if: matrix.buildplat == 'ubuntu-latest'
+        run: |
+          conda install auditwheel patchelf
+          LD_LIBRARY_PATH=$CONDA_PREFIX/lib auditwheel repair dist/*.whl -w dist/
+
+          set -euo pipefail
+          project="${{ inputs.project }}"
+          project_path="${project//./\/}"
+          project_pkg="${project//./_}"
+
+          dist_dir="$(pwd)/dist"
+          for whl in "$dist_dir"/*manylinux*.whl; do
+            echo "Patching $whl"
+            tmp=$(mktemp -d)
+            unzip -q "$whl" -d "$tmp"
+
+            libsdir="$tmp/${project_pkg}.libs"
+            declare -A vend_map
+
+            for f in "$libsdir"/*.so*; do
+              base=$(basename "$f")
+              if [[ $base =~ ^(.+)-([0-9a-f]{8})(\.so.*)$ ]]; then
+                real="${BASH_REMATCH[1]}${BASH_REMATCH[3]}"
+              else
+                real="$base"
+              fi
+              vend_map["$base"]="$real"
+            done
+
+            find "$tmp/$project_path" -type f -name "*.so" | while read -r so; do
+              for vend in "${!vend_map[@]}"; do
+                real=${vend_map[$vend]}
+                echo "    replace-needed $vend → $real in $so"
+                patchelf --replace-needed "$vend" "$real" "$so"
+              done
+              if [[ "$project" == *.* ]]; then
+                rpath='$ORIGIN/../../../../'
+              else
+                rpath='$ORIGIN/../../../'
+              fi
+              echo "    set-rpath in $so"
+              patchelf --set-rpath "$rpath" "$so"
+            done
+
+            rm -f "$libsdir"/*.so*
+            rm -f "$whl"
+            ( cd "$tmp" && zip -q -FS -r "$whl" . )
+            rm -rf "$tmp"
+          done
+
+          echo "Patch done!"
+          rm dist/*-linux_*.whl
 
       - name: Upload wheels to GitHub
         uses: actions/upload-artifact@v4
