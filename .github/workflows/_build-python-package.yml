@@ -1,0 +1,26 @@
+name: Build Wheels
+
+on:
+  workflow_call:
+    inputs:
+      project:
+        description: 'Name of the project to build'
+        default: 'PROJECT_NAME'
+        required: true
+        type: string
+      c_extension:
+        description: 'Whether the project has a C extension'
+        default: false
+        required: true
+        type: boolean
+
+jobs:
+  pure-python:
+    if: inputs.c_extension == false
+    uses: ./.github/workflows/_build-pure-python-package.yml
+
+  non-pure-python:
+    if: inputs.c_extension
+    uses: ./.github/workflows/_build-non-pure-package.yml
+    with:
+      project: ${{ inputs.project }}

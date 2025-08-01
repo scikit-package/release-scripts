@@ -6,12 +6,12 @@ on:
       project:
         description: 'Name of the project to build and release'
         default: 'PROJECT_NAME'
-        required: false
+        required: true
         type: string
       c_extension:
         description: 'Whether the project has a C extension'
         default: false
-        required: false
+        required: true
         type: boolean
       maintainer_github_username:
         description: GitHub username authorized to start GitHub/PyPI release'
@@ -31,21 +31,16 @@ jobs:
     with:
       maintainer_github_username: ${{ inputs.maintainer_github_username }}
 
-  build-pure-python-package:
+  build-python-package:
     needs: [tag-privilege-check]
-    if: inputs.c_extension == false
-    uses: ./.github/workflows/_build-pure-python-package.yml
-
-  build-non-pure-python-package:
-    needs: [tag-privilege-check]
-    if: inputs.c_extension
-    uses: ./.github/workflows/_build-non-pure-package.yml
+    uses: ./.github/workflows/_build-python-package.yml
+    with:
+      project: ${{ inputs.project }}
+      c_extension: ${{ inputs.c_extension }}
 
   update-changelog:
-    # The always() function is necessary to ensure that we wait for both build jobs to complete, even if one of them is skipped.
-    # Without always(), if one of the needed jobs is skipped, the `update-changelog` job will not be executed.
-    if: "always() && !contains(github.ref, 'rc')"
-    needs: [build-pure-python-package, build-non-pure-python-package]
+    if: "!contains(github.ref, 'rc')"
+    needs: [build-python-package]
     uses: ./.github/workflows/_update_changelog.yml
     secrets:
       PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
@@ -56,19 +51,19 @@ jobs:
     # tag to reflect the latest changes in the CHANGELOG.rst done by the update-changelog above.
     # For more discussions, please read https://github.com/scikit-package/release-scripts/pull/120
     # Always run this job for a full release but fail if the update-changelog job previously failed.
-    if: "always() && !contains(github.ref, 'rc')"
+    if: "!contains(github.ref, 'rc')"
     needs: [update-changelog]
     uses: ./.github/workflows/_delete_create_tag.yml
     with:
       update_changelog_result: ${{ needs.update-changelog.result }}
 
   github-pre-release:
-    if: "always() && contains(github.ref, 'rc')"
-    needs: [build-pure-python-package, build-non-pure-python-package]
+    if: "contains(github.ref, 'rc')"
+    needs: [build-python-package]
     uses: ./.github/workflows/_github_pre_release.yml
 
   github-release:
-    if: "always() && !contains(github.ref, 'rc')"
+    if: "!contains(github.ref, 'rc')"
     needs: [delete-create-new-tag]
     uses: ./.github/workflows/_github_release.yml
     with:
@@ -77,7 +72,6 @@ jobs:
   pypi-publish:
     needs: [github-pre-release, github-release]
     runs-on: ubuntu-latest
-    if: always()  # This job will always initiate regardless of the success or failure of the needed jobs
     steps:
       - name: Fail pypi-publish job if github-(pre)-release job failed
         run: |
@@ -113,7 +107,6 @@ jobs:
 
   docs:
     needs: [github-pre-release, github-release]
-    if: always()
     uses: ./.github/workflows/_publish-docs-on-release.yml
     with:
       project: ${{ inputs.project }}
