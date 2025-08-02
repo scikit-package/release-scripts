@@ -1,4 +1,4 @@
-name: Build wheel and sdist for a non-pure Python package
+name: Build wheel and sdist for an extension Python package
 
 on:
   workflow_call:
@@ -46,7 +46,7 @@ jobs:
           name: cibw-sdist
           path: ./dist/*.tar.gz
 
-  build-wheels:
+  build-wheel:
     needs: [build_sdist]
     defaults:
         run:
@@ -153,7 +153,7 @@ jobs:
           path: ./dist/*.whl
 
   test-wheels:
-    needs: [build-wheels]
+    needs: [build-wheel]
     defaults:
         run:
           shell: bash -l {0}

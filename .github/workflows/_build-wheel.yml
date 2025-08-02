@@ -15,12 +15,14 @@ on:
         type: boolean
 
 jobs:
-  pure-python:
+  python-pure:
     if: inputs.c_extension == false
-    uses: ./.github/workflows/_build-pure-python-package.yml
+    uses: ./.github/workflows/_build-python-wheel-pure.yml
 
-  non-pure-python:
+  python-extension:
     if: inputs.c_extension
-    uses: ./.github/workflows/_build-non-pure-package.yml
+    uses: ./.github/workflows/_build-python-wheel-extension.yml
     with:
       project: ${{ inputs.project }}
+
+# anything else

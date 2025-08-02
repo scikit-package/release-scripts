@@ -26,88 +26,33 @@ on:
         required: true
 
 jobs:
-  tag-privilege-check:
-    uses: ./.github/workflows/_release_tag_privilege_check.yml
+  check-tag-privilege:
+    uses: ./.github/workflows/_check-tag-privilege.yml
     with:
       maintainer_github_username: ${{ inputs.maintainer_github_username }}
 
-  build-python-package:
-    needs: [tag-privilege-check]
-    uses: ./.github/workflows/_build-python-package.yml
+  build-wheel:
+    needs: [check-tag-privilege]
+    uses: ./.github/workflows/_build-wheel.yml
     with:
       project: ${{ inputs.project }}
       c_extension: ${{ inputs.c_extension }}
 
-  update-changelog:
-    if: "!contains(github.ref, 'rc')"
-    needs: [build-python-package]
-    uses: ./.github/workflows/_update_changelog.yml
+  release-github:
+    needs: [build-wheel]
+    uses: ./.github/workflows/_release-github.yml
     secrets:
       PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
 
-  delete-create-new-tag:
-    # For a full release, we delete and create a new tag to reflect the latest changes in the CHANGELOG.rst.
-    # Recall that during the full release, the `main` branch's CHANGELOG.rst has been updated, and we want the
-    # tag to reflect the latest changes in the CHANGELOG.rst done by the update-changelog above.
-    # For more discussions, please read https://github.com/scikit-package/release-scripts/pull/120
-    # Always run this job for a full release but fail if the update-changelog job previously failed.
-    if: "!contains(github.ref, 'rc')"
-    needs: [update-changelog]
-    uses: ./.github/workflows/_delete_create_tag.yml
-    with:
-      update_changelog_result: ${{ needs.update-changelog.result }}
+  release-pypi:
+    needs: [release-github]
+    uses: ./.github/workflows/_release-pypi.yml
+    secrets:
+      PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
 
-  github-pre-release:
-    if: "contains(github.ref, 'rc')"
-    needs: [build-python-package]
-    uses: ./.github/workflows/_github_pre_release.yml
-
-  github-release:
-    if: "!contains(github.ref, 'rc')"
-    needs: [delete-create-new-tag]
-    uses: ./.github/workflows/_github_release.yml
-    with:
-      delete-create-new-tag-result: ${{ needs.delete-create-new-tag.result }}
-
-  pypi-publish:
-    needs: [github-pre-release, github-release]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Fail pypi-publish job if github-(pre)-release job failed
-        run: |
-          if [ "${{ needs.github-pre-release.result }}" == 'success' ] || [ "${{ needs.github-release.result }}" == 'success' ]; then
-            echo "Ready for PyPI release..."
-          else
-            echo "Previous github-(pre)-release job failed; exiting..."
-            exit 1
-          fi
-
-      - uses: actions/download-artifact@v4
-        with:
-          pattern: '**/*' # Make sure all files are downloaded, including wheels
-          path: dist
-          merge-multiple: true
-
-      - name: Setup Python for PyPI upload
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-
-      - name: Install Twine
-        run: |
-          python -m pip install --upgrade pip
-          pip install twine
-
-      - name: Publish package to PyPI
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-        run: |
-          twine upload dist/* --verbose
-
-  docs:
-    needs: [github-pre-release, github-release]
-    uses: ./.github/workflows/_publish-docs-on-release.yml
+  docs-release:
+    needs: [release-github]
+    uses: ./.github/workflows/_release-docs.yml
     with:
       project: ${{ inputs.project }}
       c_extension: ${{ inputs.c_extension }}
