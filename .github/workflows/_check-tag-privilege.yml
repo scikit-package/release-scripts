@@ -9,7 +9,7 @@ on:
         type: string
 
 jobs:
-  tag-check:
+  check-tag:
     runs-on: ubuntu-latest
     steps:
       - name: Extract and validate tag for (pre)-release
@@ -24,7 +24,7 @@ jobs:
             exit 1
           fi
 
-  privilege-check:
+  check-privilege:
     runs-on: ubuntu-latest
     steps:
       - name: Check user role

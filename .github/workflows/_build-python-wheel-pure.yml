@@ -4,7 +4,7 @@ on:
   workflow_call:
 
 jobs:
-  build-pure-python-package:
+  build:
     runs-on: ubuntu-latest
     steps:
       # Checkout the code
