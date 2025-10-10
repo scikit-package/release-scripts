@@ -9,8 +9,8 @@ on:
         required: false
         type: string
       python_versions:
-          description: 'Comma-separated list of Python versions to test within matrix CI, e.g., "3.11, 3.12"'
-          default: "3.11, 3.12, 3.13"
+          description: 'Comma-separated list of Python versions to test within matrix CI, e.g., "3.13, 3.14"'
+          default: "3.12, 3.13, 3.14"
           required: false
           type: string
       c_extension:
