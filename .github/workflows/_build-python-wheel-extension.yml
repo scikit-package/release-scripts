@@ -28,7 +28,7 @@ jobs:
           channels: conda-forge
           auto-update-conda: true
           auto-activate-base: false
-          python-version: 3.13
+          python-version: 3.14
 
       - name: Conda config
         run: >-
@@ -63,9 +63,9 @@ jobs:
           - macos-14
           - windows-latest
         python:
-          - "3.11"
           - "3.12"
           - "3.13"
+          - "3.14"
 
     steps:
       - name: Check out
@@ -169,9 +169,9 @@ jobs:
           - macos-14
           - windows-latest
         python:
-          - "3.11"
           - "3.12"
           - "3.13"
+          - "3.14"
 
     steps:
       - name: Check out

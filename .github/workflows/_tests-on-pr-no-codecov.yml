@@ -10,7 +10,7 @@ on:
         type: string
       python_version:
         description: 'Python version for Conda environment'
-        default: 3.13
+        default: 3.14
         required: false
         type: number
       c_extension:
