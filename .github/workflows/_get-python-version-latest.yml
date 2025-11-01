@@ -29,7 +29,8 @@ jobs:
         id: extract
         run: |
           VERSIONS="${{ needs.get-versions.outputs.python_versions }}"
+          echo "All versions from get-versions: $VERSIONS"
           # Extract the last version from comma-separated list
           LATEST=$(echo "$VERSIONS" | tr ',' '\n' | tail -1 | xargs)
-          echo "Latest Python version: $LATEST"
+          echo "Extracted latest Python version: $LATEST"
           echo "python_version=$LATEST" >> $GITHUB_OUTPUT
