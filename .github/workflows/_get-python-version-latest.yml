@@ -11,43 +11,25 @@ on:
     outputs:
       python_version:
         description: 'Python version to use'
-        value: ${{ jobs.get-version.outputs.python_version }}
+        value: ${{ jobs.extract-latest.outputs.python_version }}
 
 jobs:
-  get-version:
+  get-versions:
+    uses: ./.github/workflows/_get-python-versions.yml
+    with:
+      python_versions: ${{ inputs.python_version != 0 && format('{0}', inputs.python_version) || '' }}
+
+  extract-latest:
+    needs: get-versions
     runs-on: ubuntu-latest
     outputs:
-      python_version: ${{ steps.set-version.outputs.python_version }}
+      python_version: ${{ steps.extract.outputs.python_version }}
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Determine Python version
-        id: set-version
+      - name: Extract latest Python version
+        id: extract
         run: |
-          if [ "${{ inputs.python_version }}" != "0" ]; then
-            # Use user-provided version if specified
-            VERSION="${{ inputs.python_version }}"
-            echo "Using user-provided Python version: $VERSION"
-          else
-            # Extract latest version from pyproject.toml classifiers
-            if [ -f "pyproject.toml" ]; then
-              # Extract Python version classifiers and get the latest one
-              VERSION=$(grep -oP "Programming Language :: Python :: \K3\.\d+" pyproject.toml | sort -V | tail -1)
-              
-              if [ -z "$VERSION" ]; then
-                echo "Warning: No Python version classifiers found in pyproject.toml"
-                # Fallback to default version
-                VERSION="3.14"
-                echo "Using fallback version: $VERSION"
-              else
-                echo "Extracted latest Python version from pyproject.toml: $VERSION"
-              fi
-            else
-              echo "Warning: pyproject.toml not found"
-              # Fallback to default version
-              VERSION="3.14"
-              echo "Using fallback version: $VERSION"
-            fi
-          fi
-          echo "python_version=$VERSION" >> $GITHUB_OUTPUT
+          VERSIONS="${{ needs.get-versions.outputs.python_versions }}"
+          # Extract the last version from comma-separated list
+          LATEST=$(echo "$VERSIONS" | tr ',' '\n' | tail -1 | xargs)
+          echo "Latest Python version: $LATEST"
+          echo "python_version=$LATEST" >> $GITHUB_OUTPUT
