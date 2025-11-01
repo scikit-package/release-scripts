@@ -31,42 +31,9 @@ on:
 
 jobs:
   get-python-versions:
-    runs-on: ubuntu-latest
-    outputs:
-      python_versions: ${{ steps.set-versions.outputs.python_versions }}
-    steps:
-      - name: Check out ${{ inputs.project }}
-        uses: actions/checkout@v4
-
-      - name: Extract Python versions from pyproject.toml
-        id: set-versions
-        run: |
-          if [ -n "${{ inputs.python_versions }}" ]; then
-            # Use user-provided versions if specified
-            VERSIONS="${{ inputs.python_versions }}"
-            echo "Using user-provided Python versions: $VERSIONS"
-          else
-            # Extract versions from pyproject.toml classifiers
-            if [ -f "pyproject.toml" ]; then
-              # Extract Python version classifiers (e.g., "Programming Language :: Python :: 3.12")
-              VERSIONS=$(grep -oP "Programming Language :: Python :: \K3\.\d+" pyproject.toml | sort -V | tr '\n' ',' | sed 's/,$//')
-              
-              if [ -z "$VERSIONS" ]; then
-                echo "Warning: No Python version classifiers found in pyproject.toml"
-                # Fallback to default versions
-                VERSIONS="3.12, 3.13, 3.14"
-                echo "Using fallback versions: $VERSIONS"
-              else
-                echo "Extracted Python versions from pyproject.toml: $VERSIONS"
-              fi
-            else
-              echo "Warning: pyproject.toml not found"
-              # Fallback to default versions
-              VERSIONS="3.12, 3.13, 3.14"
-              echo "Using fallback versions: $VERSIONS"
-            fi
-          fi
-          echo "python_versions=$VERSIONS" >> $GITHUB_OUTPUT
+    uses: ./.github/workflows/_get-python-versions.yml
+    with:
+      python_versions: ${{ inputs.python_versions }}
 
   coverage:
     needs: get-python-versions
