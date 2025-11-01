@@ -14,13 +14,13 @@ on:
         value: ${{ jobs.extract-latest.outputs.python_version }}
 
 jobs:
-  get-versions:
+  get-python-versions:
     uses: ./.github/workflows/_get-python-versions.yml
     with:
       python_versions: ${{ inputs.python_version != 0 && format('{0}', inputs.python_version) || '' }}
 
   extract-latest:
-    needs: get-versions
+    needs: get-python-versions
     runs-on: ubuntu-latest
     outputs:
       python_version: ${{ steps.extract.outputs.python_version }}
@@ -28,8 +28,8 @@ jobs:
       - name: Extract latest Python version
         id: extract
         run: |
-          VERSIONS="${{ needs.get-versions.outputs.python_versions }}"
-          echo "All versions from get-versions: $VERSIONS"
+          VERSIONS="${{ needs.get-python-versions.outputs.python_versions }}"
+          echo "All versions from get-python-versions: $VERSIONS"
           # Extract the last version from comma-separated list
           LATEST=$(echo "$VERSIONS" | tr ',' '\n' | tail -1 | xargs)
           echo "Extracted latest Python version: $LATEST"

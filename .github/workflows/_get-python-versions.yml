@@ -11,10 +11,10 @@ on:
     outputs:
       python_versions:
         description: 'Comma-separated list of Python versions'
-        value: ${{ jobs.get-versions.outputs.python_versions }}
+        value: ${{ jobs.get-python-versions.outputs.python_versions }}
 
 jobs:
-  get-versions:
+  get-python-versions:
     runs-on: ubuntu-latest
     outputs:
       python_versions: ${{ steps.set-versions.outputs.python_versions }}
