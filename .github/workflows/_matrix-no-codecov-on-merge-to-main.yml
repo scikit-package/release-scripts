@@ -9,8 +9,8 @@ on:
         required: false
         type: string
       python_versions:
-          description: 'Comma-separated list of Python versions to test within matrix CI, e.g., "3.13, 3.14"'
-          default: "3.12, 3.13, 3.14"
+          description: 'Comma-separated list of Python versions to test within matrix CI, e.g., "3.13, 3.14". If not provided, versions will be read from pyproject.toml'
+          default: ""
           required: false
           type: string
       c_extension:
@@ -30,7 +30,46 @@ on:
         type: string
 
 jobs:
+  get-python-versions:
+    runs-on: ubuntu-latest
+    outputs:
+      python_versions: ${{ steps.set-versions.outputs.python_versions }}
+    steps:
+      - name: Check out ${{ inputs.project }}
+        uses: actions/checkout@v4
+
+      - name: Extract Python versions from pyproject.toml
+        id: set-versions
+        run: |
+          if [ -n "${{ inputs.python_versions }}" ]; then
+            # Use user-provided versions if specified
+            VERSIONS="${{ inputs.python_versions }}"
+            echo "Using user-provided Python versions: $VERSIONS"
+          else
+            # Extract versions from pyproject.toml classifiers
+            if [ -f "pyproject.toml" ]; then
+              # Extract Python version classifiers (e.g., "Programming Language :: Python :: 3.12")
+              VERSIONS=$(grep -oP "Programming Language :: Python :: \K3\.\d+" pyproject.toml | sort -V | tr '\n' ',' | sed 's/,$//')
+              
+              if [ -z "$VERSIONS" ]; then
+                echo "Warning: No Python version classifiers found in pyproject.toml"
+                # Fallback to default versions
+                VERSIONS="3.12, 3.13, 3.14"
+                echo "Using fallback versions: $VERSIONS"
+              else
+                echo "Extracted Python versions from pyproject.toml: $VERSIONS"
+              fi
+            else
+              echo "Warning: pyproject.toml not found"
+              # Fallback to default versions
+              VERSIONS="3.12, 3.13, 3.14"
+              echo "Using fallback versions: $VERSIONS"
+            fi
+          fi
+          echo "python_versions=$VERSIONS" >> $GITHUB_OUTPUT
+
   coverage:
+    needs: get-python-versions
     defaults:
       run:
         shell: bash -l {0}
@@ -40,12 +79,12 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-13, macos-14]
-        python-version: ${{ fromJson(format('[{0}]', inputs.python_versions)) }}
+        python-version: ${{ fromJson(format('[{0}]', needs.get-python-versions.outputs.python_versions)) }}
     steps:
       - name: Get the latest Python version from the matrix
         id: get_latest_python
         run: |
-          IFS=',' read -ra ADDR <<< "${{ inputs.python_versions }}"
+          IFS=',' read -ra ADDR <<< "${{ needs.get-python-versions.outputs.python_versions }}"
           echo "::set-output name=latest_python_version::${ADDR[-1]}"
 
       - name: Check out ${{ inputs.project }}

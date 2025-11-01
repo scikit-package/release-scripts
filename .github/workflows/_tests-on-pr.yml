@@ -9,8 +9,8 @@ on:
         required: false
         type: string
       python_version:
-        description: 'Python version for Conda environment'
-        default: 3.14
+        description: 'Python version for Conda environment. If not provided (or set to 0), the latest version will be read from pyproject.toml'
+        default: 0
         required: false
         type: number
       c_extension:
@@ -34,7 +34,46 @@ on:
         required: true
 
 jobs:
+  get-python-version:
+    runs-on: ubuntu-latest
+    outputs:
+      python_version: ${{ steps.set-version.outputs.python_version }}
+    steps:
+      - name: Check out ${{ inputs.project }}
+        uses: actions/checkout@v4
+
+      - name: Determine Python version
+        id: set-version
+        run: |
+          if [ "${{ inputs.python_version }}" != "0" ]; then
+            # Use user-provided version if specified
+            VERSION="${{ inputs.python_version }}"
+            echo "Using user-provided Python version: $VERSION"
+          else
+            # Extract latest version from pyproject.toml classifiers
+            if [ -f "pyproject.toml" ]; then
+              # Extract Python version classifiers and get the latest one
+              VERSION=$(grep -oP "Programming Language :: Python :: \K3\.\d+" pyproject.toml | sort -V | tail -1)
+              
+              if [ -z "$VERSION" ]; then
+                echo "Warning: No Python version classifiers found in pyproject.toml"
+                # Fallback to default version
+                VERSION="3.14"
+                echo "Using fallback version: $VERSION"
+              else
+                echo "Extracted latest Python version from pyproject.toml: $VERSION"
+              fi
+            else
+              echo "Warning: pyproject.toml not found"
+              # Fallback to default version
+              VERSION="3.14"
+              echo "Using fallback version: $VERSION"
+            fi
+          fi
+          echo "python_version=$VERSION" >> $GITHUB_OUTPUT
+
   validate:
+    needs: get-python-version
     defaults:
       run:
         shell: bash -l {0}
@@ -51,7 +90,7 @@ jobs:
           channels: conda-forge
           auto-update-conda: true
           auto-activate-base: false
-          python-version: ${{ inputs.python_version }}
+          python-version: ${{ needs.get-python-version.outputs.python_version }}
 
       - name: Conda config
         run: >-
