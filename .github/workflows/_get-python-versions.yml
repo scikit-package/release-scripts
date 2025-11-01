@@ -39,7 +39,7 @@ jobs:
               # Extract Python version classifiers (e.g., "Programming Language :: Python :: 3.12")
               # Using sed to handle multi-digit minor versions like 3.10, 3.11, etc.
               VERSIONS=$(grep "Programming Language :: Python :: 3\." pyproject.toml | sed -E 's/.*Python :: (3\.[0-9]+).*/\1/' | sort -V | tr '\n' ',' | sed 's/,$//')
-              
+
               if [ -z "$VERSIONS" ]; then
                 echo "Warning: No Python version classifiers found in pyproject.toml"
                 # Fallback to default versions
