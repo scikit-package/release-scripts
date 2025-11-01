@@ -42,17 +42,17 @@ jobs:
               
               if [ -z "$VERSIONS" ]; then
                 echo "Warning: No Python version classifiers found in pyproject.toml"
-                # Fallback to python_latest
-                VERSIONS="3.x"
-                echo "Using fallback: python_latest (3.x)"
+                # Fallback to default versions
+                VERSIONS="3.12,3.13,3.14"
+                echo "Using fallback versions: $VERSIONS"
               else
                 echo "Extracted Python versions from pyproject.toml: $VERSIONS"
               fi
             else
               echo "Warning: pyproject.toml not found"
-              # Fallback to python_latest
-              VERSIONS="3.x"
-              echo "Using fallback: python_latest (3.x)"
+              # Fallback to default versions
+              VERSIONS="3.12,3.13,3.14"
+              echo "Using fallback versions: $VERSIONS"
             fi
           fi
           echo "python_versions=$VERSIONS" >> $GITHUB_OUTPUT
