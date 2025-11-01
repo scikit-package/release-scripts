@@ -12,12 +12,16 @@ on:
       python_versions:
         description: 'Comma-separated list of Python versions'
         value: ${{ jobs.get-python-versions.outputs.python_versions }}
+      python_versions_json:
+        description: 'JSON array of Python versions as strings'
+        value: ${{ jobs.get-python-versions.outputs.python_versions_json }}
 
 jobs:
   get-python-versions:
     runs-on: ubuntu-latest
     outputs:
       python_versions: ${{ steps.set-versions.outputs.python_versions }}
+      python_versions_json: ${{ steps.format-json.outputs.python_versions_json }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -52,3 +56,12 @@ jobs:
             fi
           fi
           echo "python_versions=$VERSIONS" >> $GITHUB_OUTPUT
+
+      - name: Format versions as JSON array
+        id: format-json
+        run: |
+          VERSIONS="${{ steps.set-versions.outputs.python_versions }}"
+          # Convert "3.9, 3.10, 3.11" to ["3.9", "3.10", "3.11"]
+          JSON_ARRAY=$(echo "$VERSIONS" | sed 's/,/","/g' | sed 's/^/["/' | sed 's/$/"]/' | sed 's/ //g')
+          echo "Formatted JSON array: $JSON_ARRAY"
+          echo "python_versions_json=$JSON_ARRAY" >> $GITHUB_OUTPUT

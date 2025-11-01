@@ -50,7 +50,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-13, macos-14]
-        python-version: ${{ fromJson(format('[{0}]', needs.get-python-versions.outputs.python_versions)) }}
+        python-version: ${{ fromJson(needs.get-python-versions.outputs.python_versions_json) }}
     steps:
       - name: Get the latest Python version from the matrix
         id: get_latest_python
