@@ -33,7 +33,8 @@ jobs:
             # Extract versions from pyproject.toml classifiers
             if [ -f "pyproject.toml" ]; then
               # Extract Python version classifiers (e.g., "Programming Language :: Python :: 3.12")
-              VERSIONS=$(grep -oP "Programming Language :: Python :: \K3\.\d+" pyproject.toml | sort -V | tr '\n' ',' | sed 's/,$//')
+              # Using sed to handle multi-digit minor versions like 3.10, 3.11, etc.
+              VERSIONS=$(grep "Programming Language :: Python :: 3\." pyproject.toml | sed -E 's/.*Python :: (3\.[0-9]+).*/\1/' | sort -V | tr '\n' ',' | sed 's/,$//')
               
               if [ -z "$VERSIONS" ]; then
                 echo "Warning: No Python version classifiers found in pyproject.toml"
