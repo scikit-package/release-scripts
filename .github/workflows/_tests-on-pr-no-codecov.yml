@@ -9,8 +9,8 @@ on:
         required: false
         type: string
       python_version:
-        description: 'Python version for Conda environment'
-        default: 3.14
+        description: 'Python version for Conda environment. If not provided (or set to 0), the latest version will be read from pyproject.toml'
+        default: 0
         required: false
         type: number
       c_extension:
@@ -30,7 +30,13 @@ on:
         type: string
 
 jobs:
+  get-python-version:
+    uses: ./.github/workflows/_get-python-version-latest.yml
+    with:
+      python_version: ${{ inputs.python_version }}
+
   validate:
+    needs: get-python-version
     defaults:
       run:
         shell: bash -l {0}
@@ -47,7 +53,7 @@ jobs:
           channels: conda-forge
           auto-update-conda: true
           auto-activate-base: false
-          python-version: ${{ inputs.python_version }}
+          python-version: ${{ needs.get-python-version.outputs.python_version }}
 
       - name: Conda config
         run: >-
