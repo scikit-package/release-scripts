@@ -9,8 +9,8 @@ on:
         required: false
         type: string
       python_versions:
-          description: 'Comma-separated list of Python versions to test within matrix CI, e.g., "3.13, 3.14"'
-          default: "3.12, 3.13, 3.14"
+          description: 'Comma-separated list of Python versions to test within matrix CI, e.g., "3.13, 3.14". If not provided, versions will be read from pyproject.toml'
+          default: ""
           required: false
           type: string
       c_extension:
@@ -34,7 +34,13 @@ on:
         required: true
 
 jobs:
+  get-python-versions:
+    uses: ./.github/workflows/_get-python-versions.yml
+    with:
+      python_versions: ${{ inputs.python_versions }}
+
   coverage:
+    needs: get-python-versions
     defaults:
       run:
         shell: bash -l {0}
@@ -44,12 +50,12 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest, macos-13, macos-14]
-        python-version: ${{ fromJson(format('[{0}]', inputs.python_versions)) }}
+        python-version: ${{ fromJson(needs.get-python-versions.outputs.python_versions_json) }}
     steps:
       - name: Get the latest Python version from the matrix
         id: get_latest_python
         run: |
-          IFS=',' read -ra ADDR <<< "${{ inputs.python_versions }}"
+          IFS=',' read -ra ADDR <<< "${{ needs.get-python-versions.outputs.python_versions }}"
           echo "::set-output name=latest_python_version::${ADDR[-1]}"
 
       - name: Check out ${{ inputs.project }}

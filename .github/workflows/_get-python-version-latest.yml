@@ -1,0 +1,36 @@
+name: Get Python Version (Latest)
+
+on:
+  workflow_call:
+    inputs:
+      python_version:
+        description: 'Python version. If not provided (or set to 0), the latest version will be read from pyproject.toml'
+        default: 0
+        required: false
+        type: number
+    outputs:
+      python_version:
+        description: 'Python version to use'
+        value: ${{ jobs.extract-latest.outputs.python_version }}
+
+jobs:
+  get-python-versions:
+    uses: ./.github/workflows/_get-python-versions.yml
+    with:
+      python_versions: ${{ inputs.python_version != 0 && format('{0}', inputs.python_version) || '' }}
+
+  extract-latest:
+    needs: get-python-versions
+    runs-on: ubuntu-latest
+    outputs:
+      python_version: ${{ steps.extract.outputs.python_version }}
+    steps:
+      - name: Extract latest Python version
+        id: extract
+        run: |
+          VERSIONS="${{ needs.get-python-versions.outputs.python_versions }}"
+          echo "All versions from get-python-versions: $VERSIONS"
+          # Extract the last version from comma-separated list
+          LATEST=$(echo "$VERSIONS" | tr ',' '\n' | tail -1 | xargs)
+          echo "Extracted latest Python version: $LATEST"
+          echo "python_version=$LATEST" >> $GITHUB_OUTPUT
