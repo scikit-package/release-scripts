@@ -18,9 +18,10 @@ on:
         required: true
         type: string
       python_version:
-        description: 'Optional Python versions to use (comma-separated). If not provided, will be detected from pyproject.toml'
+        description: 'Python version to use. If not provided (or set to 0), will be detected from pyproject.toml'
+        default: 0
         required: false
-        type: string
+        type: number
     secrets:
       PYPI_TOKEN:
         description: 'PyPI token'
@@ -36,7 +37,6 @@ jobs:
       maintainer_github_username: ${{ inputs.maintainer_github_username }}
 
   get-python-version:
-    needs: [check-tag-privilege]
     uses: ./.github/workflows/_get-python-version-latest.yml
     with:
       python_version: ${{ inputs.python_version }}
