@@ -17,8 +17,8 @@ on:
         description: GitHub username authorized to start GitHub/PyPI release'
         required: true
         type: string
-      python-version:
-        description: 'Optional Python version to use. If not provided, will be detected from pyproject.toml'
+      python_version:
+        description: 'Optional Python versions to use (comma-separated). If not provided, will be detected from pyproject.toml'
         required: false
         type: string
     secrets:
@@ -38,7 +38,7 @@ jobs:
   get-python-version:
     uses: ./.github/workflows/_get-python-version-latest.yml
     with:
-      python_version: ${{ inputs.python-version }}
+      python_version: ${{ inputs.python_version }}
 
   build-wheel:
     needs: [check-tag-privilege, get-python-version]
@@ -46,7 +46,7 @@ jobs:
     with:
       project: ${{ inputs.project }}
       c_extension: ${{ inputs.c_extension }}
-      python-version: ${{ needs.get-python-version.outputs.latest-python-version }}
+      python-version: ${{ needs.get-python-version.outputs.python_version }}
 
   release-github:
     needs: [build-wheel]
@@ -55,14 +55,17 @@ jobs:
       PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
 
   release-pypi:
-    needs: [release-github]
+    needs: [release-github, get-python-version]
     uses: ./.github/workflows/_release-pypi.yml
+    with:
+      python_version: ${{ needs.get-python-version.outputs.python_version }}
     secrets:
       PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
 
   docs-release:
-    needs: [release-github]
+    needs: [release-github, get-python-version]
     uses: ./.github/workflows/_release-docs.yml
     with:
       project: ${{ inputs.project }}
       c_extension: ${{ inputs.c_extension }}
+      python_version: ${{ needs.get-python-version.outputs.python_version }}

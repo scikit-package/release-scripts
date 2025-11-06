@@ -8,10 +8,10 @@ on:
         default: 'PROJECT_NAME'
         required: true
         type: string
-      python-version:
+      python_version:
         description: 'Python version to use for building'
         required: true
-        type: string
+        type: number
 
 jobs:
   build_sdist:
@@ -32,7 +32,7 @@ jobs:
           channels: conda-forge
           auto-update-conda: true
           auto-activate-base: false
-          python-version: ${{ inputs.python-version }}
+          python-version: ${{ inputs.python_version }}
 
       - name: Conda config
         run: >-
@@ -56,7 +56,7 @@ jobs:
         run:
           shell: bash -l {0}
 
-    name: cibw-wheels-${{ inputs.python-version }}-${{ matrix.buildplat }}
+    name: cibw-wheels-${{ inputs.python_version }}-${{ matrix.buildplat }}
     runs-on: ${{ matrix.buildplat }}
     strategy:
       fail-fast: false
@@ -67,7 +67,7 @@ jobs:
           - macos-14
           - windows-latest
         python:
-          - ${{ inputs.python-version }}
+          - ${{ inputs.python_version }}
 
     steps:
       - name: Check out
@@ -160,7 +160,7 @@ jobs:
         run:
           shell: bash -l {0}
 
-    name: test-wheels-${{ inputs.python-version }}-${{ matrix.buildplat }}
+    name: test-wheels-${{ inputs.python_version }}-${{ matrix.buildplat }}
     runs-on: ${{ matrix.buildplat }}
     strategy:
       fail-fast: false
@@ -171,7 +171,7 @@ jobs:
           - macos-14
           - windows-latest
         python:
-          - ${{ inputs.python-version }}
+          - ${{ inputs.python_version }}
 
     steps:
       - name: Check out

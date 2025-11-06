@@ -9,9 +9,8 @@ on:
         required: false
         type: string
       python_version:
-        description: 'Python version for Conda environment'
-        default: 3.14
-        required: false
+        description: 'Python version to use for building documentation'
+        required: true
         type: number
       c_extension:
         description: 'Whether the project has a C extension'

@@ -3,10 +3,10 @@ name: Build wheel and sdist for a pure Python package
 on:
   workflow_call:
     inputs:
-      python-version:
+      python_version:
         description: 'Python version to use for building'
         required: true
-        type: string
+        type: number
 
 jobs:
   build:
@@ -22,7 +22,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ inputs.python-version }}
+          python-version: ${{ inputs.python_version }}
 
       # Install build tool
       - name: Install build dependencies
