@@ -36,17 +36,17 @@ jobs:
       maintainer_github_username: ${{ inputs.maintainer_github_username }}
 
   get-python-version:
-    if: ${{ !inputs.python-version }}
     uses: ./.github/workflows/_get-python-version-latest.yml
+    with:
+      python_version: ${{ inputs.python-version }}
 
   build-wheel:
     needs: [check-tag-privilege, get-python-version]
-    if: ${{ !failure() && !cancelled() }}
     uses: ./.github/workflows/_build-wheel.yml
     with:
       project: ${{ inputs.project }}
       c_extension: ${{ inputs.c_extension }}
-      python-version: ${{ inputs.python-version != '' && inputs.python-version || needs.get-python-version.outputs.latest-python-version }}
+      python-version: ${{ needs.get-python-version.outputs.latest-python-version }}
 
   release-github:
     needs: [build-wheel]
