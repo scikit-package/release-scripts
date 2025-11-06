@@ -37,12 +37,13 @@ jobs:
       maintainer_github_username: ${{ inputs.maintainer_github_username }}
 
   get-python-version:
+    needs: [check-tag-privilege]
     uses: ./.github/workflows/_get-python-version-latest.yml
     with:
       python_version: ${{ inputs.python_version }}
 
   build-wheel:
-    needs: [check-tag-privilege, get-python-version]
+    needs: [get-python-version]
     uses: ./.github/workflows/_build-wheel.yml
     with:
       project: ${{ inputs.project }}
