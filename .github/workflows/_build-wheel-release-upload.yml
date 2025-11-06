@@ -17,6 +17,10 @@ on:
         description: GitHub username authorized to start GitHub/PyPI release'
         required: true
         type: string
+      python-version:
+        description: 'Optional Python version to use. If not provided, will be detected from pyproject.toml'
+        required: false
+        type: string
     secrets:
       PYPI_TOKEN:
         description: 'PyPI token'
@@ -31,12 +35,18 @@ jobs:
     with:
       maintainer_github_username: ${{ inputs.maintainer_github_username }}
 
+  get-python-version:
+    if: ${{ !inputs.python-version }}
+    uses: ./.github/workflows/_get-python-version-latest.yml
+
   build-wheel:
-    needs: [check-tag-privilege]
+    needs: [check-tag-privilege, get-python-version]
+    if: ${{ !failure() && !cancelled() }}
     uses: ./.github/workflows/_build-wheel.yml
     with:
       project: ${{ inputs.project }}
       c_extension: ${{ inputs.c_extension }}
+      python-version: ${{ inputs.python-version != '' && inputs.python-version || needs.get-python-version.outputs.latest-python-version }}
 
   release-github:
     needs: [build-wheel]
