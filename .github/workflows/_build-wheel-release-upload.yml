@@ -48,7 +48,8 @@ jobs:
     with:
       project: ${{ inputs.project }}
       c_extension: ${{ inputs.c_extension }}
-      python_version: ${{ needs.get-python-version.outputs.python_version }}
+      # Convert from number to string
+      python_version: ${{ fromJSON(needs.get-python-version.outputs.python_version) }}
 
   release-github:
     needs: [build-wheel]
@@ -60,7 +61,8 @@ jobs:
     needs: [release-github, get-python-version]
     uses: ./.github/workflows/_release-pypi.yml
     with:
-      python_version: ${{ needs.get-python-version.outputs.python_version }}
+      # Convert from number to string
+      python_version: ${{ fromJSON(needs.get-python-version.outputs.python_version) }}
     secrets:
       PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
 
@@ -70,4 +72,5 @@ jobs:
     with:
       project: ${{ inputs.project }}
       c_extension: ${{ inputs.c_extension }}
-      python_version: ${{ needs.get-python-version.outputs.python_version }}
+      # Convert from number to string
+      python_version: ${{ fromJSON(needs.get-python-version.outputs.python_version) }}
