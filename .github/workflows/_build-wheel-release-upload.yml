@@ -46,7 +46,7 @@ jobs:
     with:
       project: ${{ inputs.project }}
       c_extension: ${{ inputs.c_extension }}
-      python-version: ${{ needs.get-python-version.outputs.python_version }}
+      python_version: ${{ needs.get-python-version.outputs.python_version }}
 
   release-github:
     needs: [build-wheel]
