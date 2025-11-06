@@ -67,7 +67,7 @@ def main():
 change/feature/fix,
 please add a news item by copying the format from `news/TEMPLATE.rst`.
 For best practices, please visit
-https://scikit-package.github.io/scikit-package/frequently-asked-questions.html#billinge-group-standards.
+https://scikit-package.github.io/scikit-package/snippets/news-file-format.html#how-do-i-create-a-news-file.
 """
             )
         assert False
