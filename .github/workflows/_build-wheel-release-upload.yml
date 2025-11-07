@@ -17,6 +17,11 @@ on:
         description: GitHub username authorized to start GitHub/PyPI release'
         required: true
         type: string
+      python_version:
+        description: 'Python version to use. If not provided (or set to 0), will be detected from pyproject.toml'
+        default: 0
+        required: false
+        type: number
     secrets:
       PYPI_TOKEN:
         description: 'PyPI token'
@@ -31,12 +36,20 @@ jobs:
     with:
       maintainer_github_username: ${{ inputs.maintainer_github_username }}
 
-  build-wheel:
+  get-python-version:
     needs: [check-tag-privilege]
+    uses: ./.github/workflows/_get-python-version-latest.yml
+    with:
+      python_version: ${{ inputs.python_version }}
+
+  build-wheel:
+    needs: [get-python-version]
     uses: ./.github/workflows/_build-wheel.yml
     with:
       project: ${{ inputs.project }}
       c_extension: ${{ inputs.c_extension }}
+      # Convert from number to string
+      python_version: ${{ fromJSON(needs.get-python-version.outputs.python_version) }}
 
   release-github:
     needs: [build-wheel]
@@ -45,14 +58,19 @@ jobs:
       PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
 
   release-pypi:
-    needs: [release-github]
+    needs: [release-github, get-python-version]
     uses: ./.github/workflows/_release-pypi.yml
+    with:
+      # Convert from number to string
+      python_version: ${{ fromJSON(needs.get-python-version.outputs.python_version) }}
     secrets:
       PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
 
   docs-release:
-    needs: [release-github]
+    needs: [release-github, get-python-version]
     uses: ./.github/workflows/_release-docs.yml
     with:
       project: ${{ inputs.project }}
       c_extension: ${{ inputs.c_extension }}
+      # Convert from number to string
+      python_version: ${{ fromJSON(needs.get-python-version.outputs.python_version) }}
