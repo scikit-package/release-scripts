@@ -51,26 +51,26 @@ jobs:
       # Convert from number to string
       python_version: ${{ fromJSON(needs.get-python-version.outputs.python_version) }}
 
-  release-github:
-    needs: [build-wheel]
-    uses: ./.github/workflows/_release-github.yml
-    secrets:
-      PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+  # release-github:
+  #   needs: [build-wheel]
+  #   uses: ./.github/workflows/_release-github.yml
+  #   secrets:
+  #     PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
 
-  release-pypi:
-    needs: [release-github, get-python-version]
-    uses: ./.github/workflows/_release-pypi.yml
-    with:
-      # Convert from number to string
-      python_version: ${{ fromJSON(needs.get-python-version.outputs.python_version) }}
-    secrets:
-      PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
+  # release-pypi:
+  #   needs: [release-github, get-python-version]
+  #   uses: ./.github/workflows/_release-pypi.yml
+  #   with:
+  #     # Convert from number to string
+  #     python_version: ${{ fromJSON(needs.get-python-version.outputs.python_version) }}
+  #   secrets:
+  #     PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
 
-  docs-release:
-    needs: [release-github, get-python-version]
-    uses: ./.github/workflows/_release-docs.yml
-    with:
-      project: ${{ inputs.project }}
-      c_extension: ${{ inputs.c_extension }}
-      # Convert from number to string
-      python_version: ${{ fromJSON(needs.get-python-version.outputs.python_version) }}
+  # docs-release:
+  #   needs: [release-github, get-python-version]
+  #   uses: ./.github/workflows/_release-docs.yml
+  #   with:
+  #     project: ${{ inputs.project }}
+  #     c_extension: ${{ inputs.c_extension }}
+  #     # Convert from number to string
+  #     python_version: ${{ fromJSON(needs.get-python-version.outputs.python_version) }}
