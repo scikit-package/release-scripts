@@ -63,8 +63,8 @@ jobs:
       matrix:
         buildplat:
           - ubuntu-latest
-          - macos-13
-          - macos-14
+          - macos-latest
+          - macos-15-intel
           - windows-latest
         python:
           - "3.12"
@@ -169,8 +169,8 @@ jobs:
       matrix:
         buildplat:
           - ubuntu-latest
-          - macos-13
-          - macos-14
+          - macos-latest
+          - macos-15-intel
           - windows-latest
         python:
           - "3.12"
