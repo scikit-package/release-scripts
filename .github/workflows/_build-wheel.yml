@@ -31,5 +31,3 @@ jobs:
     with:
       project: ${{ inputs.project }}
       python_version: ${{ inputs.python_version }}
-
-# anything else

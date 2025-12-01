@@ -56,18 +56,20 @@ jobs:
         run:
           shell: bash -l {0}
 
-    name: cibw-wheels-${{ inputs.python_version }}-${{ matrix.buildplat }}
+    name: cibw-wheels-${{ matrix.python }}-${{ matrix.buildplat }}
     runs-on: ${{ matrix.buildplat }}
     strategy:
       fail-fast: false
       matrix:
         buildplat:
           - ubuntu-latest
-          - macos-13
-          - macos-14
+          - macos-latest
+          - macos-15-intel
           - windows-latest
         python:
-          - ${{ inputs.python_version }}
+          - "3.12"
+          - "3.13"
+          - "3.14"
 
     steps:
       - name: Check out
@@ -160,18 +162,20 @@ jobs:
         run:
           shell: bash -l {0}
 
-    name: test-wheels-${{ inputs.python_version }}-${{ matrix.buildplat }}
+    name: test-wheels-${{ matrix.python }}-${{ matrix.buildplat }}
     runs-on: ${{ matrix.buildplat }}
     strategy:
       fail-fast: false
       matrix:
         buildplat:
           - ubuntu-latest
-          - macos-13
-          - macos-14
+          - macos-latest
+          - macos-15-intel
           - windows-latest
         python:
-          - ${{ inputs.python_version }}
+          - "3.12"
+          - "3.13"
+          - "3.14"
 
     steps:
       - name: Check out
