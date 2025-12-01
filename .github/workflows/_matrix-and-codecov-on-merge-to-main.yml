@@ -49,7 +49,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-13, macos-14]
+        os: [ubuntu-latest, windows-latest, macos-latest, macos-15-intel]
         python-version: ${{ fromJson(needs.get-python-versions.outputs.python_versions_json) }}
     steps:
       - name: Get the latest Python version from the matrix
