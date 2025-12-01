@@ -56,7 +56,7 @@ jobs:
         run:
           shell: bash -l {0}
 
-    name: cibw-wheels-${{ inputs.python_version }}-${{ matrix.buildplat }}
+    name: cibw-wheels-${{ matrix.python }}-${{ matrix.buildplat }}
     runs-on: ${{ matrix.buildplat }}
     strategy:
       fail-fast: false
