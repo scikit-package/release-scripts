@@ -170,10 +170,7 @@ jobs:
           - macos-latest
           - macos-15-intel
           - windows-latest
-        python:
-          - "3.11"
-          - "3.12"
-          - "3.13"
+        python: ${{ fromJSON(inputs.python_version) }}
 
     steps:
       - name: Check out
