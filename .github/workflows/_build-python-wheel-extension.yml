@@ -12,7 +12,6 @@ on:
         description: 'Python versions to use for building'
         required: true
         type: string
-        default: '["3.12", "3.13", "3.14"]'
 
 jobs:
   build_sdist:
@@ -67,7 +66,7 @@ jobs:
           - macos-latest
           - macos-15-intel
           - windows-latest
-        python: ${{ fromJSON(inputs.python_version) }}
+        python: ${{ fromJSON(inputs.python_version || '["3.12", "3.13", "3.14"]') }}
 
     steps:
       - name: Check out
