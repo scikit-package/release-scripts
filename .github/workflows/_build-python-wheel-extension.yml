@@ -12,7 +12,6 @@ on:
         description: 'Python versions to use for building'
         required: true
         type: string
-        default: '["3.11", "3.12", "3.13"]'
 
 jobs:
   build_sdist:
@@ -67,11 +66,25 @@ jobs:
           - macos-latest
           - macos-15-intel
           - windows-latest
-        python: ${{ fromJSON(inputs.python_version) }}
+        python: ${{ fromJSON(inputs.python_version || '["3.12", "3.13", "3.14"]') }}
 
     steps:
       - name: Check out
         uses: actions/checkout@v4
+
+      - name: Debug python version source
+        run: |
+          if [ -n "${{ inputs.python_version }}" ]; then
+            echo "Python versions obtained dynamically from workflow_call input:"
+            echo "    ${{ inputs.python_version }}"
+          else
+            echo "python_version input empty or missing. Falling back to default:"
+            echo "    [\"3.12\", \"3.13\", \"3.14\"]"
+          fi
+
+          echo "Resolved matrix value for this job:"
+          echo "    ${{ matrix.python }}"
+
 
       - name: Initialize miniconda
         uses: conda-incubator/setup-miniconda@v3
