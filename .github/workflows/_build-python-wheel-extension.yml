@@ -11,8 +11,11 @@ on:
       python_version:
         description: 'Python versions to use for building'
         required: true
+        type: number
+      python_versions:
+        description: 'Python versions to use for building matrix'
+        required: true
         type: string
-        default: '["3.11", "3.12", "3.13"]'
 
 jobs:
   build_sdist:
@@ -67,7 +70,7 @@ jobs:
           - macos-latest
           - macos-15-intel
           - windows-latest
-        python: ${{ fromJSON(inputs.python_version) }}
+        python: ${{ fromJSON(inputs.python_versions) }}
 
     steps:
       - name: Check out
@@ -170,7 +173,7 @@ jobs:
           - macos-latest
           - macos-15-intel
           - windows-latest
-        python: ${{ fromJSON(inputs.python_version) }}
+        python: ${{ fromJSON(inputs.python_versions) }}
 
     steps:
       - name: Check out
