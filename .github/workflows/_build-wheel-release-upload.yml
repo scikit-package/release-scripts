@@ -50,6 +50,7 @@ jobs:
       c_extension: ${{ inputs.c_extension }}
       # Convert from number to string
       python_version: ${{ fromJSON(needs.get-python-version.outputs.python_version) }}
+      python_versions: ${{ needs.get-python-version.outputs.python_versions }}
 
   release-github:
     needs: [build-wheel]

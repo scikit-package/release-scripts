@@ -17,6 +17,10 @@ on:
         description: 'Python version to use for building'
         required: true
         type: number
+      python_versions:
+        description: 'Python versions to use for building matrix'
+        required: true
+        type: string
 
 jobs:
   python-pure:
@@ -31,3 +35,4 @@ jobs:
     with:
       project: ${{ inputs.project }}
       python_version: ${{ inputs.python_version }}
+      python_versions: ${{ inputs.python_versions }}
