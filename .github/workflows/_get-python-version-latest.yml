@@ -12,6 +12,9 @@ on:
       python_version:
         description: 'Python version to use'
         value: ${{ jobs.extract-latest.outputs.python_version }}
+      python_versions:
+        description: 'Python versions for building matrix'
+        value: ${{ jobs.get-python-versions.outputs.python_versions_json }}
 
 jobs:
   get-python-versions:
