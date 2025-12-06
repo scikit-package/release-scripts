@@ -57,7 +57,7 @@ jobs:
           channels: conda-forge
           auto-update-conda: true
           auto-activate-base: false
-          python-version: ${{ needs.get-python-version.outputs.python_version }}
+          python-version: ${{ needs.get-python-version.outputs.latest_python_version }}
 
       - name: Conda config
         run: >-
