@@ -10,7 +10,7 @@ on:
         type: number
     outputs:
       latest_python_version:
-        description: 'The latest suproted python version'
+        description: 'The latest supported python version'
         value: ${{ jobs.extract-latest.outputs.python_version }}
       python_versions_json:
         description: 'JSON array of supported Python versions as strings'
