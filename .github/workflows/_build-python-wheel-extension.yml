@@ -8,12 +8,12 @@ on:
         default: 'PROJECT_NAME'
         required: true
         type: string
-      python_version:
-        description: 'Python versions to use for building'
+      latest_python_version:
+        description: 'The latest supported python version'
         required: true
         type: number
-      python_versions:
-        description: 'Python versions to use for building matrix'
+      python_versions_json:
+        description: 'JSON array of supported Python versions as strings'
         required: true
         type: string
 
@@ -36,7 +36,7 @@ jobs:
           channels: conda-forge
           auto-update-conda: true
           auto-activate-base: false
-          python-version: ${{ inputs.python_version }}
+          python-version: ${{ inputs.latest_python_version }}
 
       - name: Conda config
         run: >-
@@ -70,7 +70,7 @@ jobs:
           - macos-latest
           - macos-15-intel
           - windows-latest
-        python: ${{ fromJSON(inputs.python_versions) }}
+        python: ${{ fromJSON(inputs.python_versions_json) }}
 
     steps:
       - name: Check out
@@ -173,7 +173,7 @@ jobs:
           - macos-latest
           - macos-15-intel
           - windows-latest
-        python: ${{ fromJSON(inputs.python_versions) }}
+        python: ${{ fromJSON(inputs.python_versions_json) }}
 
     steps:
       - name: Check out
