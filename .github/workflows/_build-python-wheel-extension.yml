@@ -9,7 +9,7 @@ on:
         required: true
         type: string
       latest_python_version:
-        description: 'The latest suproted python version'
+        description: 'The latest supported python version'
         required: true
         type: number
       python_versions_json:
