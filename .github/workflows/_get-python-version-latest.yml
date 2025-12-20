@@ -9,11 +9,11 @@ on:
         required: false
         type: number
     outputs:
-      python_version:
-        description: 'Python version to use'
+      latest_python_version:
+        description: 'The latest supported python version'
         value: ${{ jobs.extract-latest.outputs.python_version }}
-      python_versions:
-        description: 'Python versions for building matrix'
+      python_versions_json:
+        description: 'JSON array of supported Python versions as strings'
         value: ${{ jobs.get-python-versions.outputs.python_versions_json }}
 
 jobs:

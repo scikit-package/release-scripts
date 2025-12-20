@@ -13,12 +13,12 @@ on:
         default: false
         required: true
         type: boolean
-      python_version:
-        description: 'Python version to use for building'
+      latest_python_version:
+        description: 'The latest supported python version'
         required: true
         type: number
-      python_versions:
-        description: 'Python versions to use for building matrix'
+      python_versions_json:
+        description: 'JSON array of supported Python versions as strings'
         required: true
         type: string
 
@@ -27,12 +27,12 @@ jobs:
     if: inputs.c_extension == false
     uses: ./.github/workflows/_build-python-wheel-pure.yml
     with:
-      python_version: ${{ inputs.python_version }}
+      python_version: ${{ inputs.latest_python_version }}
 
   python-extension:
     if: inputs.c_extension
     uses: ./.github/workflows/_build-python-wheel-extension.yml
     with:
       project: ${{ inputs.project }}
-      python_version: ${{ inputs.python_version }}
-      python_versions: ${{ inputs.python_versions }}
+      latest_python_version: ${{ inputs.latest_python_version }}
+      python_versions_json: ${{ inputs.python_versions_json }}
