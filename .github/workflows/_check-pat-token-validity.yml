@@ -16,15 +16,15 @@ jobs:
           GH_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           set -euo pipefail
-      
+
           if [ -z "$GH_TOKEN" ]; then
             echo "::error::PAT_TOKEN is not set or not visible to this workflow"
             exit 1
           fi
-      
+
           curl -fsSL \
             -H "Authorization: token $GH_TOKEN" \
             https://api.github.com/repos/${{ github.repository }} \
             > /dev/null
-      
+
           echo "GitHub PAT is valid and has repo access."
