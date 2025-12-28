@@ -2,7 +2,9 @@ name: Check the PAT_TOKEN and PYPI_TOKENS are valid
 
 on:
   workflow_call:
-
+    secrets:
+      PYPI_TOKEN:
+        required: true
 jobs:
   validate-pypi-token:
     runs-on: ubuntu-latest
