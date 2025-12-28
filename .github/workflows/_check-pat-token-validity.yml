@@ -15,10 +15,16 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
-          echo "Testing whether PAT_TOKEN is valid"
-          echo "If this fails, set or renew the PAT_TOKEN in the org/repository"
-          echo "Please see scikit-package docs for more info"
+          set -euo pipefail
+      
+          if [ -z "$GH_TOKEN" ]; then
+            echo "::error::PAT_TOKEN is not set or not visible to this workflow"
+            exit 1
+          fi
+      
           curl -fsSL \
-            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Authorization: token $GH_TOKEN" \
             https://api.github.com/repos/${{ github.repository }} \
             > /dev/null
+      
+          echo "GitHub PAT is valid and has repo access."
