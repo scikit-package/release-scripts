@@ -53,20 +53,24 @@ jobs:
         uses: actions/checkout@v4
         with:
           ref: main
-      - name: Delete the tag
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
+      - name: Delete the local tag
         run: |
           git fetch --tags
           git tag -d "${{ github.ref_name }}"
+      - name: Reset the auth to PAT_TOKEN
+        run:
+          git config --global --unset-all http.https://github.com/.extraheader || true
+          git remote set-url origin https://${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}.git
+      - name: Check the GITHUB_TOKEN was successfully unset
+        run:
+          git config --get-all http.https://github.com/.extraheader
+      - name: Push the deleted tag upstream to delete it there
+        run:
           git push origin ":${{ github.ref_name }}"
       - name: Create a new tag (Expect commit SHA to match with that of main branch)
-        env:
-          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           git tag "${{ github.ref_name }}"
           git push origin "${{ github.ref_name }}"
-
 
   release:
     needs: [release-delete-create-new-tag]

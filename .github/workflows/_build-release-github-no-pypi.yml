@@ -23,9 +23,6 @@ on:
         required: false
         type: number
     secrets:
-      PYPI_TOKEN:
-        description: 'PyPI token'
-        required: true
       PAT_TOKEN:
         description: 'GitHub Personal Access Token'
         required: true
@@ -35,6 +32,9 @@ jobs:
     uses: ./.github/workflows/_check-tag-privilege.yml
     with:
       maintainer_github_username: ${{ inputs.maintainer_github_username }}
+
+  check-pat-token-validity:
+    uses: ./.github/workflows/_check-pat-token-validity.yml
 
   get-python-version:
     needs: [check-tag-privilege]

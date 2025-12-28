@@ -1,0 +1,24 @@
+name: Check the PAT_TOKEN and PYPI_TOKENS are valid
+
+on:
+  workflow_call:
+
+jobs:
+  validate-pat-token:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Validate GitHub PAT
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+        run: |
+          echo "Testing whether PAT_TOKEN is valid"
+          echo "If this fails, set or renew the PAT_TOKEN in the org/repository"
+          echo "Please see scikit-package docs for more info"
+          curl -fsSL \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            https://api.github.com/repos/${{ github.repository }} \
+            > /dev/null
