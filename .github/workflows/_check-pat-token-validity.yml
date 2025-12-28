@@ -2,6 +2,9 @@ name: Check the PAT_TOKEN and PYPI_TOKENS are valid
 
 on:
   workflow_call:
+    secrets:
+      PAT_TOKEN:
+        required: true
 
 jobs:
   validate-pat-token:

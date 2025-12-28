@@ -38,9 +38,13 @@ jobs:
 
   check-pat-token-validity:
     uses: ./.github/workflows/_check-pat-token-validity.yml
+    secrets:
+      PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
 
   check-pypi-token-validity:
     uses: ./.github/workflows/_check-pypi-token-validity.yml
+    secrets:
+      PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
 
   get-python-version:
     needs: [check-tag-privilege, check-pat-token-validity, check-pypi-token-validity]
