@@ -37,7 +37,7 @@ jobs:
     uses: ./.github/workflows/_check-pat-token-validity.yml
 
   get-python-version:
-    needs: [check-tag-privilege]
+    needs: [check-tag-privilege, check-pat-token-validity]
     uses: ./.github/workflows/_get-python-version-latest.yml
     with:
       python_version: ${{ inputs.python_version }}
