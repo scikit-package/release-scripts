@@ -54,14 +54,19 @@ jobs:
         with:
           ref: main
       - name: Delete the tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           git fetch --tags
           git tag -d "${{ github.ref_name }}"
           git push origin ":${{ github.ref_name }}"
       - name: Create a new tag (Expect commit SHA to match with that of main branch)
+        env:
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
         run: |
           git tag "${{ github.ref_name }}"
           git push origin "${{ github.ref_name }}"
+
 
   release:
     needs: [release-delete-create-new-tag]
