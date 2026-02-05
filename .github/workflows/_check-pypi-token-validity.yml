@@ -1,29 +1,28 @@
-name: Check the PAT_TOKEN and PYPI_TOKENS are valid
+name: Validate PYPI Token
 
 on:
   workflow_call:
     secrets:
       PYPI_TOKEN:
         required: true
+
 jobs:
   validate-pypi-token:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-
-      - name: Validate PyPI token
+      - name: Check PyPI token via API
         env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+          PYPI_TOKEN: ${{ secrets.PYPI_TOKEN }}
         run: |
           echo "Testing whether PYPI_TOKEN is valid"
-          echo "If this fails, set or renew the PYPI_TOKEN in the org/repository"
-          echo "Please see scikit-package docs for more info"
-          python -m pip install --upgrade twine
-          twine upload \
-            --repository-url https://upload.pypi.org/legacy/ \
-            --skip-existing \
-            --non-interactive \
-            /dev/null
+          USER="__token__"
+          PASS="$PYPI_TOKEN"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -u "$USER:$PASS" https://upload.pypi.org/legacy/)
+          if [ "$STATUS" -eq 200 ] || [ "$STATUS" -eq 201 ]; then
+            echo "PYPI_TOKEN is valid."
+          else
+            echo "PYPI_TOKEN is invalid or expired."
+            echo "Please set or renew the PYPI_TOKEN in the org/repository."
+            echo "See scikit-package docs for more info"
+            exit 1
+          fi
