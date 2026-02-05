@@ -19,9 +19,11 @@ jobs:
 
       - name: Create dummy package
         run: |
-          mkdir dummy_pkg
-          echo "from setuptools import setup; setup(name='dummy', version='0.0.1')" > dummy_pkg/setup.py
-          python -m build dummy_pkg --wheel
+          PKGNAME="dummy-token-test-$(date +%s)"
+          echo "Using package name: $PKGNAME"
+          mkdir "$PKGNAME"
+          echo "from setuptools import setup; setup(name='$PKGNAME', version='0.0.1')" > "$PKGNAME/setup.py"
+          python -m build "$PKGNAME" --wheel
 
       - name: Validate PyPI token
         env:
