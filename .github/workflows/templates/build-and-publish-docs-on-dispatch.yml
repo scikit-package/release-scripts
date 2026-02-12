@@ -1,4 +1,4 @@
-name: Deploy Documentation on Release
+name: Build and Publish Docs on Dispatch
 
 on:
   workflow_dispatch:
