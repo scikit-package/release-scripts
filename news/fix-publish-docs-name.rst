@@ -16,7 +16,7 @@
 
 **Fixed:**
 
-* Fix name in package template. Changed from _publish-docs-on-release.yml to _release-docs.yml.
+* Fix name in package template and get python version dynamically. Changed from _publish-docs-on-release.yml to _release-docs.yml.
 
 **Security:**
 
