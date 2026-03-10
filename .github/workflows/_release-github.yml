@@ -38,7 +38,7 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: update changelog
-          branch: main
+          branch: {{ inputs.release_branch }}
 
   release-delete-create-new-tag:
   # For a full release, we delete and create a new tag to reflect the latest changes in the CHANGELOG.rst.
@@ -52,7 +52,7 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: {{ inputs.release_branch }}
       - name: Delete the local tag
         run: |
           git fetch --tags
@@ -79,7 +79,7 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v4
         with:
-          ref: main
+          ref: {{ inputs.release_branch }}
       - name: Generate GH release notes for release
         run: |
           wget https://raw.githubusercontent.com/scikit-package/release-scripts/v0/.github/workflows/get-latest-changelog.py

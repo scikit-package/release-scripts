@@ -3,7 +3,7 @@ name: Check for News
 on:
   pull_request_target:
     branches:
-      - main
+      - {{ inputs.release_branch }}
 
 jobs:
   check-news-item:
