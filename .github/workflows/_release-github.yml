@@ -6,6 +6,11 @@ on:
       PAT_TOKEN:
         description: 'GitHub Personal Access Token'
         required: true
+    inputs:
+      release_branch:
+        description: 'Branch to release from. If not provided, will default to main'
+        required: true
+        type: string
 
 jobs:
   pre-release:
@@ -38,7 +43,7 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: update changelog
-          branch: "${{ inputs.release_branch }}"
+          branch: ${{ inputs.release_branch }}
 
   release-delete-create-new-tag:
   # For a full release, we delete and create a new tag to reflect the latest changes in the CHANGELOG.rst.
@@ -52,7 +57,7 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v4
         with:
-          ref: "$"${{ inputs.release_branch }}""
+          ref: ${{ inputs.release_branch }}
       - name: Delete the local tag
         run: |
           git fetch --tags
@@ -79,7 +84,7 @@ jobs:
       - name: Checkout the repository
         uses: actions/checkout@v4
         with:
-          ref: {{ inputs.release_branch }}
+          ref: ${{ inputs.release_branch }}
       - name: Generate GH release notes for release
         run: |
           wget https://raw.githubusercontent.com/scikit-package/release-scripts/v0/.github/workflows/get-latest-changelog.py
