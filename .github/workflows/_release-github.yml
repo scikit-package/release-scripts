@@ -9,6 +9,7 @@ on:
     inputs:
       release_branch:
         description: 'Branch to release from. If not provided, will default to main'
+        default: main
         required: true
         type: string
 
