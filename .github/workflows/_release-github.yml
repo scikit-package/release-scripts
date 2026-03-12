@@ -10,7 +10,7 @@ on:
       release_branch:
         description: 'Branch to release from. If not provided, will default to main'
         default: main
-        required: true
+        required: false
         type: string
 
 jobs:
