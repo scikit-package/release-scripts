@@ -48,7 +48,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out ${{ inputs.project }}
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Initialize miniconda
         uses: conda-incubator/setup-miniconda@v3
