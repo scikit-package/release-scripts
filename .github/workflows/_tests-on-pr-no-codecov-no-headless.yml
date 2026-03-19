@@ -60,4 +60,3 @@ jobs:
         run: |
           pytest --cov
           coverage report -m
-          codecov
