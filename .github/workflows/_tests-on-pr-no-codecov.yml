@@ -88,4 +88,3 @@ jobs:
           fi
           pytest --cov
           coverage report -m
-          codecov
