@@ -103,7 +103,7 @@ jobs:
           fi
           pytest --cov
           coverage report -m
-          codecov xml
+          coverage xml
 
       - name: Upload coverage to Codecov
         if: matrix.os == 'ubuntu-latest' && matrix.python-version == steps.get_latest_python.outputs.latest_python_version
