@@ -98,4 +98,5 @@ jobs:
         with:
           verbose: true
           fail_ci_if_error: true
+          slug: ${{ github.repository   }}
           token: ${{ secrets.CODECOV_TOKEN }}
