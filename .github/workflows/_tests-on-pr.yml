@@ -28,10 +28,15 @@ on:
         default: 'echo "No extra commands"'
         required: false
         type: string
+      upload_coverage:
+        description: 'Upload coverage to Codecov from within this workflow. Set to false for callers in a different GitHub organization, where cross-org secret passing is unsupported. Those callers should instead add a separate upload-coverage job using the coverage-report artifact produced here.'
+        default: true
+        required: false
+        type: boolean
     secrets:
       CODECOV_TOKEN:
         description: 'Codecov token'
-        required: true
+        required: false
 
 jobs:
   get-python-version:
@@ -94,11 +99,19 @@ jobs:
           coverage report -m
           coverage xml
 
+      - name: Upload coverage report artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+          retention-days: 1
+
       - name: Upload coverage to Codecov
+        if: inputs.upload_coverage
         uses: codecov/codecov-action@v5
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
           verbose: true
           fail_ci_if_error: true
-          slug: ${{ github.repository   }}
+          slug: ${{ github.repository }}
