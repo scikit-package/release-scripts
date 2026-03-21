@@ -28,10 +28,15 @@ on:
         default: 'echo "No extra commands"'
         required: false
         type: string
+      codecov_token:
+        description: 'Codecov upload token. Use this instead of the secret when calling from a different GitHub organization, as cross-org secret passing is not supported by GitHub Actions.'
+        default: ''
+        required: false
+        type: string
     secrets:
       CODECOV_TOKEN:
         description: 'Codecov token'
-        required: true
+        required: false
 
 jobs:
   get-python-version:
@@ -97,8 +102,8 @@ jobs:
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v5
         env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          CODECOV_TOKEN: ${{ inputs.codecov_token || secrets.CODECOV_TOKEN }}
         with:
           verbose: true
           fail_ci_if_error: true
-          slug: ${{ github.repository   }}
+          slug: ${{ github.repository }}
