@@ -193,10 +193,11 @@ jobs:
           name: wheel
           path: dist/
 
-      - name: Bundle wheel and INSTRUCTIONS.txt into dist zip
+      - name: Bundle wheel, LICENSE, and INSTRUCTIONS.txt into dist zip
         run: |
           ZIPFILE="dist/${{ inputs.project }}-${TAG}-dist.zip"
           find dist -name '*.whl' | zip -j "$ZIPFILE" -@
+          find . -maxdepth 1 -name 'LICENSE*' | zip -j "$ZIPFILE" -@
           if [[ -f INSTRUCTIONS.txt ]]; then
             zip -j "$ZIPFILE" INSTRUCTIONS.txt
           fi
