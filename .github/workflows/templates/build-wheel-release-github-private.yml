@@ -1,0 +1,16 @@
+name: Build Wheel and Release on GitHub
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "*" # Trigger on all tags; release privilege is verified in the reusable workflow
+
+jobs:
+  build-release:
+    uses: scikit-package/release-scripts/.github/workflows/_build-release-github-private-pure.yml@{{ VERSION/v0 }}
+    with:
+      project: {{ PROJECT/PROJECT_NAME }}
+      maintainer_github_username: {{ MAINTAINER_GITHUB_USERNAME/GITHUB_USERNAME }}
+    secrets:
+      PAT_TOKEN: ${{ secrets.PAT_TOKEN }}

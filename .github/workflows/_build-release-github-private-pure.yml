@@ -1,0 +1,249 @@
+name: Build Pure Python Wheel and Release on GitHub (Private Repo)
+
+on:
+  workflow_call:
+    inputs:
+      project:
+        description: 'The name of the project'
+        default: 'PROJECT_NAME'
+        required: false
+        type: string
+      maintainer_github_username:
+        description: 'The GitHub username of the maintainer authorized to release'
+        required: true
+        type: string
+      python_versions:
+        description: 'Comma-separated Python versions to test, e.g. "3.12, 3.13". If not provided, versions will be read from pyproject.toml'
+        default: ''
+        required: false
+        type: string
+      release_branch:
+        description: 'The branch to release from'
+        default: main
+        required: false
+        type: string
+      headless:
+        description: 'Whether to run headless tests (e.g. for GUI packages requiring a display)'
+        default: false
+        required: false
+        type: boolean
+    secrets:
+      PAT_TOKEN:
+        description: 'GitHub Personal Access Token with write access to the repository'
+        required: true
+
+jobs:
+  check-tag-privilege:
+    uses: scikit-package/release-scripts/.github/workflows/_check-tag-privilege.yml@v0
+    with:
+      maintainer_github_username: ${{ inputs.maintainer_github_username }}
+
+  get-python-versions:
+    uses: scikit-package/release-scripts/.github/workflows/_get-python-versions.yml@v0
+    with:
+      python_versions: ${{ inputs.python_versions }}
+
+  check-tag-on-main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out ${{ inputs.project }} with full history
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: Verify tag is on ${{ inputs.release_branch }}
+        run: |
+          git fetch origin ${{ inputs.release_branch }}
+          TAG_COMMIT=$(git rev-parse ${{ github.ref_name }})
+          if git merge-base --is-ancestor "$TAG_COMMIT" origin/${{ inputs.release_branch }}; then
+            echo "Tag ${{ github.ref_name }} ($TAG_COMMIT) is on ${{ inputs.release_branch }}"
+          else
+            echo "::error::Tag ${{ github.ref_name }} is not on ${{ inputs.release_branch }}. Please release from ${{ inputs.release_branch }}."
+            exit 1
+          fi
+
+  build-wheel:
+    needs: [check-tag-privilege, get-python-versions, check-tag-on-main]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out ${{ inputs.project }}
+        uses: actions/checkout@v6
+      - name: Get latest Python version
+        id: py
+        run: |
+          VERSIONS="${{ needs.get-python-versions.outputs.python_versions }}"
+          LATEST=$(echo "$VERSIONS" | tr ',' '\n' | tail -1 | xargs)
+          echo "latest=$LATEST" >> $GITHUB_OUTPUT
+      - name: Set up Python ${{ steps.py.outputs.latest }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ steps.py.outputs.latest }}
+      - name: Build pure Python wheel
+        run: |
+          python -m pip install --upgrade build
+          python -m build --wheel
+      - name: Upload wheel artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel
+          path: dist/*.whl
+          retention-days: 1
+
+  test-wheel:
+    needs: [build-wheel, get-python-versions]
+    defaults:
+      run:
+        shell: bash -l {0}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        python-version: ${{ fromJson(needs.get-python-versions.outputs.python_versions_json) }}
+    steps:
+      - name: Check out ${{ inputs.project }}
+        uses: actions/checkout@v6
+      - name: Initialize miniconda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          activate-environment: test
+          channels: conda-forge
+          auto-update-conda: true
+          auto-activate-base: false
+          python-version: ${{ matrix.python-version }}
+      - name: Conda config
+        run: conda config --set always_yes yes --set changeps1 no
+      - name: Install test requirements
+        run: |
+          conda install --file requirements/conda.txt
+          conda install --file requirements/tests.txt
+      - name: Download wheel
+        uses: actions/download-artifact@v4
+        with:
+          name: wheel
+          path: dist/
+      - name: Install wheel
+        run: pip install --find-links=dist --no-deps ${{ inputs.project }}
+      - name: Start Xvfb
+        if: ${{ inputs.headless && matrix.os == 'ubuntu-latest' }}
+        run: |
+          sudo apt-get install -y xvfb
+          export DISPLAY=:99
+          Xvfb :99 -screen 0 1024x768x16 &
+      - name: Run tests
+        run: |
+          if [[ "${{ matrix.os }}" == "ubuntu-latest" && "${{ inputs.headless }}" == "true" ]]; then
+            export DISPLAY=:99
+          fi
+          pytest
+
+  release:
+    needs: [test-wheel]
+    runs-on: ubuntu-latest
+    env:
+      TAG: ${{ github.ref_name }}
+      REPO_FULL: ${{ github.repository }}
+      PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
+    steps:
+      - name: Check out ${{ inputs.project }}
+        uses: actions/checkout@v6
+        with:
+          token: ${{ secrets.PAT_TOKEN }}
+          fetch-depth: 0
+          ref: ${{ inputs.release_branch }}
+
+      - name: Update CHANGELOG.rst
+        if: ${{ !contains(github.ref, 'rc') }}
+        run: |
+          wget https://raw.githubusercontent.com/scikit-package/release-scripts/v0/.github/workflows/update-changelog.py
+          python update-changelog.py "$TAG"
+          rm update-changelog.py
+
+      - name: Commit updated CHANGELOG.rst
+        if: ${{ !contains(github.ref, 'rc') }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add CHANGELOG.rst
+          if ! git diff --cached --quiet; then
+            git commit -m "update changelog for $TAG"
+            git remote set-url origin "https://$PAT_TOKEN@github.com/$REPO_FULL.git"
+            git push origin ${{ inputs.release_branch }}
+          fi
+
+      - name: Retag at updated commit
+        if: ${{ !contains(github.ref, 'rc') }}
+        run: |
+          git fetch --tags
+          git tag -d "$TAG" 2>/dev/null || true
+          git remote set-url origin "https://$PAT_TOKEN@github.com/$REPO_FULL.git"
+          git push origin ":$TAG" 2>/dev/null || true
+          git tag "$TAG"
+          git push origin "$TAG"
+
+      - name: Get changelog body for release notes
+        if: ${{ !contains(github.ref, 'rc') }}
+        run: |
+          wget https://raw.githubusercontent.com/scikit-package/release-scripts/v0/.github/workflows/get-latest-changelog.py
+          python get-latest-changelog.py "$TAG"
+          rm get-latest-changelog.py
+
+      - name: Download wheel artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: wheel
+          path: dist/
+
+      - name: Bundle wheel and INSTRUCTIONS.txt into dist zip
+        run: |
+          ZIPFILE="dist/${{ inputs.project }}-${TAG}-dist.zip"
+          find dist -name '*.whl' | zip -j "$ZIPFILE" -@
+          if [[ -f INSTRUCTIONS.txt ]]; then
+            zip -j "$ZIPFILE" INSTRUCTIONS.txt
+          fi
+          echo "zipfile=$ZIPFILE" >> $GITHUB_ENV
+
+      - name: Prepare release metadata
+        id: meta
+        run: |
+          if [[ "$TAG" == *rc* ]]; then
+            PRERELEASE=true
+            TITLE="Pre-release $TAG"
+            BODY_RAW="Changelog: https://github.com/$REPO_FULL/commits/$TAG"
+          else
+            PRERELEASE=false
+            TITLE="Release $TAG"
+            BODY_RAW=$(<CHANGELOG.txt)
+          fi
+          jq -n \
+            --arg tag "$TAG" \
+            --arg name "$TITLE" \
+            --arg body "$BODY_RAW" \
+            --argjson prerelease "$PRERELEASE" \
+            '{ tag_name: $tag, name: $name, body: $body, prerelease: $prerelease }' > payload.json
+
+      - name: Create GitHub Release
+        id: create_release
+        run: |
+          set -euo pipefail
+          HTTP_STATUS=$(
+            curl --silent --output resp.json --write-out "%{http_code}" \
+              -X POST "https://api.github.com/repos/$REPO_FULL/releases" \
+              -H "Accept: application/vnd.github+json" \
+              -H "Content-Type: application/json" \
+              -H "Authorization: Bearer $PAT_TOKEN" \
+              --data @payload.json
+          )
+          if [[ "$HTTP_STATUS" -ne 201 ]]; then
+            echo "::error::Failed to create GitHub release (HTTP $HTTP_STATUS)"
+            cat resp.json
+            exit 1
+          fi
+          UPLOAD_URL=$(jq -r .upload_url resp.json | sed 's/{.*}//')
+          echo "upload_url=$UPLOAD_URL" >> $GITHUB_OUTPUT
+
+      - name: Upload dist zip to GitHub Release
+        run: |
+          curl --silent --fail --data-binary @"${{ env.zipfile }}" \
+            -H "Content-Type: application/zip" \
+            -H "Authorization: Bearer $PAT_TOKEN" \
+            "${{ steps.create_release.outputs.upload_url }}?name=$(basename ${{ env.zipfile }})"
