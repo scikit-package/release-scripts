@@ -61,15 +61,19 @@ def main():
         if old_comment:
             print("Old warning remains relevant, no action needed.")
         else:
+            # fmt: off
             pr.create_issue_comment(
-                """\
-**Warning!** No news item is found for this PR. If this is a user-facing
-change/feature/fix,
-please add a news item by copying the format from `news/TEMPLATE.rst`.
-For best practices, please visit
-https://scikit-package.github.io/scikit-package/snippets/news-file-format.html#how-do-i-create-a-news-file.
-"""
+                """**Warning!** No news item is found for this PR.
+
+                If this is a user-facing
+                change/feature/fix, please add a
+                news item by copying the format from
+                `news/TEMPLATE.rst`. For best
+                practices, please visit
+                https://scikit-package.github.io/scikit-package/snippets/news-file-format.html#how-do-i-create-a-news-file.
+                """
             )
+        # fmt: on
         assert False
 
 
