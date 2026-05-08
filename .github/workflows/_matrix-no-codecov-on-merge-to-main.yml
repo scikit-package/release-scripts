@@ -78,6 +78,7 @@ jobs:
           if ${{ inputs.c_extension }}; then
             conda install --file requirements/build.txt
           fi
+          conda install pip
           python -m pip install . --no-deps
 
       - name: Run extra user-defined CLI commands
