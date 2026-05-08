@@ -58,10 +58,9 @@ repos:
       - id: prettier
         additional_dependencies:
           - "prettier@^3.2.4"
-  # docformatter - PEP 257 compliant docstring formatter
-  - repo: https://github.com/s-weigand/docformatter
-    rev: 5757c5190d95e5449f102ace83df92e7d3b06c6c
+  # ruff - An extremely fast Python linter and code formatter, written in Rust.
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.12
     hooks:
-      - id: docformatter
-        additional_dependencies: [tomli]
-        args: [--in-place, --config, ./pyproject.toml]
+      - id: ruff-check
+        args: [--fix, --config=pyproject.toml]
