@@ -24,7 +24,12 @@ on:
         type: boolean
 
 jobs:
+  get-python-version:
+    uses: ./.github/workflows/_get-python-version-latest.yml
+    with:
+      python_version: ${{ inputs.python_version }}
   build-deploy:
+    needs: get-python-version
     defaults:
       run:
         shell: bash -l {0}
@@ -43,7 +48,7 @@ jobs:
           channels: conda-forge
           auto-update-conda: true
           auto-activate-base: false
-          python-version: ${{ inputs.python_version }}
+          python-version: ${{ needs.get-python-version.outputs.latest_python_version }}
 
       - name: Conda config
         run: >-
