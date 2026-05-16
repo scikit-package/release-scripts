@@ -7,6 +7,11 @@ on:
         description: 'Python version to use for building'
         required: true
         type: number
+      pip_packages:  # e.g. '<package1> <package2>'
+        description: 'packages to install via pip'
+        default: ''
+        required: false
+        type: string
 
 jobs:
   build:
@@ -27,6 +32,11 @@ jobs:
       # Install build tool
       - name: Install build dependencies
         run: python -m pip install --upgrade build
+
+      # Install additional pip packages if specified
+      - name: Install additional pip packages
+        if: ${{ inputs.pip_packages != '' }}
+        run: python -m pip install ${{ inputs.pip_packages }}
 
       # Build the package (creates both .whl and .tar.gz in ./dist)
       - name: Build wheel and sdist

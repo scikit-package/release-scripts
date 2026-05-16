@@ -27,6 +27,11 @@ on:
         default: main
         required: false
         type: string
+      pip_packages:  # e.g. '<package1> <package2>'
+        description: 'packages to install via pip'
+        default: ''
+        required: false
+        type: string
     secrets:
       PYPI_TOKEN:
         description: 'PyPI token'
@@ -66,6 +71,7 @@ jobs:
       # Convert from number to string
       latest_python_version: ${{ fromJSON(needs.get-python-version.outputs.latest_python_version) }}
       python_versions_json: ${{ needs.get-python-version.outputs.python_versions_json }}
+      pip_packages: ${{ inputs.pip_packages }}
 
   release-github:
     needs: [build-wheel]

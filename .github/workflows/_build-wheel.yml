@@ -13,6 +13,11 @@ on:
         default: false
         required: true
         type: boolean
+      pip_packages:
+        description: 'packages to install via pip'
+        default: '' # e.g. '<package1> <package2>'
+        required: false
+        type: string
       latest_python_version:
         description: 'The latest supported python version'
         required: true
@@ -28,6 +33,7 @@ jobs:
     uses: ./.github/workflows/_build-python-wheel-pure.yml
     with:
       python_version: ${{ inputs.latest_python_version }}
+      pip_packages: ${{ inputs.pip_packages }}
 
   python-extension:
     if: inputs.c_extension
@@ -36,3 +42,4 @@ jobs:
       project: ${{ inputs.project }}
       latest_python_version: ${{ inputs.latest_python_version }}
       python_versions_json: ${{ inputs.python_versions_json }}
+      pip_packages: ${{ inputs.pip_packages }}

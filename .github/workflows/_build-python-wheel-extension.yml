@@ -16,6 +16,11 @@ on:
         description: 'JSON array of supported Python versions as strings'
         required: true
         type: string
+      pip_packages:  # e.g. '<package1> <package2>'
+        description: 'packages to install via pip'
+        default: ''
+        required: false
+        type: string
 
 jobs:
   build_sdist:
@@ -46,6 +51,7 @@ jobs:
       - name: Build sdist
         run: |
           conda install --file requirements/conda.txt
+          conda install pip
           pip install --upgrade build
           python -m build --sdist
 
@@ -90,10 +96,18 @@ jobs:
           conda config --set always_yes yes
           --set changeps1 no
 
-      - name: Install requirements and build wheels
+      - name: Install requirements via conda
         run: |
           conda install --file requirements/conda.txt
           conda install --file requirements/pip.txt
+          conda install pip
+
+      - name: Install requirements via pip
+        if: ${{ inputs.pip_packages != '' }}
+        run: pip install ${{ inputs.pip_packages }}
+
+      - name: build wheels
+        run: |
           pip install --upgrade build
           python -m pip wheel --no-deps --wheel-dir ./dist .
 
@@ -203,6 +217,7 @@ jobs:
         run: |
           conda install --file requirements/conda.txt
           conda install --file requirements/tests.txt
+          conda install pip
 
       - name: Install wheel and test
         run: |

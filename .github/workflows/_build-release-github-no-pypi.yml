@@ -22,6 +22,11 @@ on:
         default: 0
         required: false
         type: number
+      pip_packages: # e.g. '<package1> <package2>'
+        description: 'packages to install via pip'
+        default: ''
+        required: false
+        type: string
     secrets:
       PAT_TOKEN:
         description: 'GitHub Personal Access Token'
@@ -53,6 +58,7 @@ jobs:
       # Convert from number to string
       latest_python_version: ${{ fromJSON(needs.get-python-version.outputs.latest_python_version) }}
       python_versions_json: ${{ needs.get-python-version.outputs.python_versions_json }}
+      pip_packages: ${{ inputs.pip_packages }}
 
   release-github:
     needs: [build-wheel]
