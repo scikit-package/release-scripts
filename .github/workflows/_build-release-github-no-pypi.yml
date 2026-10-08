@@ -3,6 +3,11 @@ name: Build Wheel, Release, Upload
 on:
   workflow_call:
     inputs:
+      submodules:
+        description: 'Submodules to check out: false, true, or recursive'
+        default: 'false'
+        required: false
+        type: string
       project:
         description: 'Name of the project to build and release'
         default: 'PROJECT_NAME'
@@ -53,6 +58,7 @@ jobs:
     needs: [get-python-version]
     uses: ./.github/workflows/_build-wheel.yml
     with:
+      submodules: ${{ inputs.submodules }}
       project: ${{ inputs.project }}
       c_extension: ${{ inputs.c_extension }}
       # Convert from number to string
@@ -70,6 +76,7 @@ jobs:
     needs: [release-github, get-python-version]
     uses: ./.github/workflows/_release-docs.yml
     with:
+      submodules: ${{ inputs.submodules }}
       project: ${{ inputs.project }}
       c_extension: ${{ inputs.c_extension }}
       # Convert from number to string

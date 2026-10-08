@@ -3,6 +3,11 @@ name: Build wheel and sdist for an extension Python package
 on:
   workflow_call:
     inputs:
+      submodules:
+        description: 'Submodules to check out: false, true, or recursive'
+        default: 'false'
+        required: false
+        type: string
       project:
         description: 'Name of the project to build'
         default: 'PROJECT_NAME'
@@ -33,6 +38,8 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v6
+        with:
+          submodules: ${{ inputs.submodules }}
 
       - name: Initialize miniconda
         uses: conda-incubator/setup-miniconda@v3
@@ -81,6 +88,8 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v6
+        with:
+          submodules: ${{ inputs.submodules }}
 
       - name: Initialize miniconda
         uses: conda-incubator/setup-miniconda@v3
@@ -192,6 +201,8 @@ jobs:
     steps:
       - name: Check out
         uses: actions/checkout@v6
+        with:
+          submodules: ${{ inputs.submodules }}
 
       - name: Download wheels
         uses: actions/download-artifact@v4
