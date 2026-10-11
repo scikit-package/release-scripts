@@ -3,6 +3,11 @@ name: Build Pure Python Wheel and Release on GitHub (Private Repo)
 on:
   workflow_call:
     inputs:
+      submodules:
+        description: 'Submodules to check out: false, true, or recursive'
+        default: 'false'
+        required: false
+        type: string
       project:
         description: 'The name of the project'
         default: 'PROJECT_NAME'
@@ -67,6 +72,8 @@ jobs:
     steps:
       - name: Check out ${{ inputs.project }}
         uses: actions/checkout@v6
+        with:
+          submodules: ${{ inputs.submodules }}
       - name: Get latest Python version
         id: py
         run: |
@@ -102,6 +109,8 @@ jobs:
     steps:
       - name: Check out ${{ inputs.project }}
         uses: actions/checkout@v6
+        with:
+          submodules: ${{ inputs.submodules }}
       - name: Initialize miniconda
         uses: conda-incubator/setup-miniconda@v3
         with:
