@@ -3,6 +3,11 @@ name: Tests on PR
 on:
   workflow_call:
     inputs:
+      submodules:
+        description: 'Submodules to check out: false, true, or recursive'
+        default: 'false'
+        required: false
+        type: string
       project:
         description: 'Name of the project to test'
         default: 'PROJECT_NAME'
@@ -45,6 +50,8 @@ jobs:
     steps:
       - name: Check out ${{ inputs.project }}
         uses: actions/checkout@v6
+        with:
+          submodules: ${{ inputs.submodules }}
 
       - name: Initialize miniconda
         uses: conda-incubator/setup-miniconda@v3
