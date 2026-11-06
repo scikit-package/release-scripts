@@ -32,6 +32,11 @@ on:
         default: main
         required: false
         type: string
+      deploy_docs:
+        description: 'Whether to build and deploy the Sphinx documentation to GitHub Pages'
+        default: true
+        required: false
+        type: boolean
       pip_packages:  # e.g. '<package1> <package2>'
         description: 'packages to install via pip'
         default: ''
@@ -96,6 +101,7 @@ jobs:
 
   docs-release:
     needs: [release-github, get-python-version]
+    if: ${{ inputs.deploy_docs }}
     uses: ./.github/workflows/_release-docs.yml
     with:
       submodules: ${{ inputs.submodules }}
