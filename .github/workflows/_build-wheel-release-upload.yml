@@ -87,6 +87,8 @@ jobs:
   release-github:
     needs: [build-wheel]
     uses: ./.github/workflows/_release-github.yml
+    with:
+      release_branch: ${{ inputs.release_branch }}
     secrets:
       PAT_TOKEN: ${{ secrets.PAT_TOKEN }}
 
