@@ -29,10 +29,6 @@ on:
 
 jobs:
   build_sdist:
-    defaults:
-        run:
-          shell: bash -l {0}
-
     name: Build sdist
     runs-on: ubuntu-latest
     steps:
@@ -40,26 +36,16 @@ jobs:
         uses: actions/checkout@v6
         with:
           submodules: ${{ inputs.submodules }}
+          fetch-depth: 0
 
-      - name: Initialize miniconda
-        uses: conda-incubator/setup-miniconda@v3
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          activate-environment: sdist
-          channels: conda-forge
-          auto-update-conda: true
-          auto-activate-base: false
           python-version: ${{ inputs.latest_python_version }}
-
-      - name: Conda config
-        run: >-
-          conda config --set always_yes yes
-          --set changeps1 no
 
       - name: Build sdist
         run: |
-          conda install --file requirements/conda.txt
-          conda install pip
-          pip install --upgrade build
+          python -m pip install --upgrade build
           python -m build --sdist
 
       - uses: actions/upload-artifact@v4
@@ -68,12 +54,7 @@ jobs:
           path: ./dist/*.tar.gz
 
   build-wheel:
-    needs: [build_sdist]
-    defaults:
-        run:
-          shell: bash -l {0}
-
-    name: cibw-wheels-${{ matrix.python }}-${{ matrix.buildplat }}
+    name: cibw-wheels-${{ matrix.buildplat }}
     runs-on: ${{ matrix.buildplat }}
     strategy:
       fail-fast: false
@@ -83,102 +64,34 @@ jobs:
           - macos-latest
           - macos-15-intel
           - windows-latest
-        python: ${{ fromJSON(inputs.python_versions_json) }}
 
     steps:
       - name: Check out
         uses: actions/checkout@v6
         with:
           submodules: ${{ inputs.submodules }}
+          fetch-depth: 0
 
-      - name: Initialize miniconda
-        uses: conda-incubator/setup-miniconda@v3
-        with:
-          activate-environment: build
-          channels: conda-forge
-          auto-update-conda: true
-          auto-activate-base: false
-          python-version: ${{ matrix.python }}
-
-      - name: Conda config
-        run: >-
-          conda config --set always_yes yes
-          --set changeps1 no
-
-      - name: Install requirements via conda
+      - name: Check cibuildwheel config
+        shell: bash
         run: |
-          conda install --file requirements/conda.txt
-          conda install --file requirements/pip.txt
-          conda install pip
+          grep -q '^\[tool\.cibuildwheel' pyproject.toml || {
+            echo "::error::[tool.cibuildwheel] not found in pyproject.toml"
+            exit 1
+          }
 
-      - name: Install requirements via pip
-        if: ${{ inputs.pip_packages != '' }}
-        run: pip install ${{ inputs.pip_packages }}
-
-      - name: build wheels
-        run: |
-          pip install --upgrade build
-          python -m pip wheel --no-deps --wheel-dir ./dist .
-
-      - name: Repair wheels
-        if: matrix.buildplat == 'ubuntu-latest'
-        run: |
-          conda install auditwheel patchelf
-          LD_LIBRARY_PATH=$CONDA_PREFIX/lib auditwheel repair dist/*.whl -w dist/
-
-          set -euo pipefail
-          project="${{ inputs.project }}"
-          project_path="${project//./\/}"
-          project_pkg="${project//./_}"
-
-          dist_dir="$(pwd)/dist"
-          for whl in "$dist_dir"/*manylinux*.whl; do
-            echo "Patching $whl"
-            tmp=$(mktemp -d)
-            unzip -q "$whl" -d "$tmp"
-
-            libsdir="$tmp/${project_pkg}.libs"
-            declare -A vend_map
-
-            for f in "$libsdir"/*.so*; do
-              base=$(basename "$f")
-              if [[ $base =~ ^(.+)-([0-9a-f]{8})(\.so.*)$ ]]; then
-                real="${BASH_REMATCH[1]}${BASH_REMATCH[3]}"
-              else
-                real="$base"
-              fi
-              vend_map["$base"]="$real"
-            done
-
-            find "$tmp/$project_path" -type f -name "*.so" | while read -r so; do
-              for vend in "${!vend_map[@]}"; do
-                real=${vend_map[$vend]}
-                echo "    replace-needed $vend → $real in $so"
-                patchelf --replace-needed "$vend" "$real" "$so"
-              done
-              if [[ "$project" == *.* ]]; then
-                rpath='$ORIGIN/../../../../'
-              else
-                rpath='$ORIGIN/../../../'
-              fi
-              echo "    set-rpath in $so"
-              patchelf --set-rpath "$rpath" "$so"
-            done
-
-            rm -f "$libsdir"/*.so*
-            rm -f "$whl"
-            ( cd "$tmp" && zip -q -FS -r "$whl" . )
-            rm -rf "$tmp"
-          done
-
-          echo "Patch done!"
-          rm dist/*-linux_*.whl
+      - name: Build and test wheels
+        uses: pypa/cibuildwheel@v4.3.5
+        env:
+          # Install in each build environment, preserving the project's hooks.
+          CIBW_BEFORE_BUILD: ${{ inputs.pip_packages != '' && format('python -m pip install {0}', inputs.pip_packages) || '' }}
+          CIBW_INHERIT: 'before-build: append'
 
       - name: Upload wheels to GitHub
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.python }}-${{ matrix.buildplat }}.whl
-          path: ./dist/*.whl
+          name: cibw-wheels-${{ matrix.buildplat }}
+          path: ./wheelhouse/*.whl
 
   test-wheels:
     needs: [build-wheel]
@@ -207,7 +120,7 @@ jobs:
       - name: Download wheels
         uses: actions/download-artifact@v4
         with:
-          name: ${{ matrix.python }}-${{ matrix.buildplat }}.whl
+          name: cibw-wheels-${{ matrix.buildplat }}
           path: ./dist
 
       - name: Initialize miniconda
@@ -230,7 +143,9 @@ jobs:
           conda install --file requirements/tests.txt
           conda install pip
 
+      # The artifact holds one wheel per Python version; install the matching one.
       - name: Install wheel and test
         run: |
-          pip install ./dist/*.whl
+          py="${{ matrix.python }}"
+          pip install ./dist/*-cp${py//./}-*.whl
           pytest
