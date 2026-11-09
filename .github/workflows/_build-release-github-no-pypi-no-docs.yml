@@ -18,6 +18,11 @@ on:
         default: false
         required: true
         type: boolean
+      build_c_ext_with_cibw:
+        description: 'Build the C extension with cibuildwheel (only used when c_extension is true)'
+        default: false
+        required: false
+        type: boolean
       maintainer_github_username:
         description: GitHub username authorized to start GitHub/PyPI release'
         required: true
@@ -61,6 +66,7 @@ jobs:
       submodules: ${{ inputs.submodules }}
       project: ${{ inputs.project }}
       c_extension: ${{ inputs.c_extension }}
+      build_c_ext_with_cibw: ${{ inputs.build_c_ext_with_cibw }}
       # Convert from number to string
       latest_python_version: ${{ fromJSON(needs.get-python-version.outputs.latest_python_version) }}
       python_versions_json: ${{ needs.get-python-version.outputs.python_versions_json }}
