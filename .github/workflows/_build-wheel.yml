@@ -62,3 +62,4 @@ jobs:
     with:
       submodules: ${{ inputs.submodules }}
       latest_python_version: ${{ inputs.latest_python_version }}
+      python_versions_json: ${{ inputs.python_versions_json }}

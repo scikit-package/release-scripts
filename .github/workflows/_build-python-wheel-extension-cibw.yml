@@ -12,6 +12,10 @@ on:
         description: 'The latest supported python version'
         required: true
         type: number
+      python_versions_json:
+        description: 'JSON array of supported Python versions as strings'
+        required: true
+        type: string
 
 jobs:
   build_sdist:
@@ -66,6 +70,19 @@ jobs:
             echo "::error::[tool.cibuildwheel] table not found in pyproject.toml. Please add it to configure cibuildwheel, or set build_c_ext_with_cibw to false."
             exit 1
           }
+
+      # Build for the Python versions in the classifiers, e.g. "3.12,3.13" -> "cp312-* cp313-*".
+      - name: Select Python versions
+        shell: bash
+        env:
+          PYTHON_VERSIONS: ${{ join(fromJSON(inputs.python_versions_json), ' ') }}
+        run: |
+          build=""
+          for v in $PYTHON_VERSIONS; do
+            build+="cp${v//./}-* "
+          done
+          echo "CIBW_BUILD=${build% }" >> "$GITHUB_ENV"
+          echo "CIBW_BUILD=${build% }"
 
       - name: Build and test wheels
         uses: pypa/cibuildwheel@v4
