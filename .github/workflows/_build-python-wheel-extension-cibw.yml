@@ -85,7 +85,7 @@ jobs:
           echo "CIBW_BUILD=${build% }"
 
       - name: Build and test wheels
-        uses: pypa/cibuildwheel@v4
+        uses: pypa/cibuildwheel@v4.3.5
 
       - name: Upload wheels to GitHub
         uses: actions/upload-artifact@v4
