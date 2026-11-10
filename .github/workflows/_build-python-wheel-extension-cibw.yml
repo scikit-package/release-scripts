@@ -8,11 +8,6 @@ on:
         default: 'false'
         required: false
         type: string
-      project:
-        description: 'Name of the project to build'
-        default: 'PROJECT_NAME'
-        required: true
-        type: string
       latest_python_version:
         description: 'The latest supported python version'
         required: true
@@ -20,11 +15,6 @@ on:
       python_versions_json:
         description: 'JSON array of supported Python versions as strings'
         required: true
-        type: string
-      pip_packages:  # e.g. '<package1> <package2>'
-        description: 'packages to install via pip'
-        default: ''
-        required: false
         type: string
 
 jobs:
@@ -77,76 +67,28 @@ jobs:
         shell: bash
         run: |
           grep -q '^\[tool\.cibuildwheel' pyproject.toml || {
-            echo "::error::[tool.cibuildwheel] not found in pyproject.toml"
+            echo "::error::[tool.cibuildwheel] table not found in pyproject.toml. Please add it to configure cibuildwheel, or set build_c_ext_with_cibw to false."
             exit 1
           }
 
+      # Build for the Python versions in the classifiers, e.g. "3.12,3.13" -> "cp312-* cp313-*".
+      - name: Select Python versions
+        shell: bash
+        env:
+          PYTHON_VERSIONS: ${{ join(fromJSON(inputs.python_versions_json), ' ') }}
+        run: |
+          build=""
+          for v in $PYTHON_VERSIONS; do
+            build+="cp${v//./}-* "
+          done
+          echo "CIBW_BUILD=${build% }" >> "$GITHUB_ENV"
+          echo "CIBW_BUILD=${build% }"
+
       - name: Build and test wheels
         uses: pypa/cibuildwheel@v4.3.5
-        env:
-          # Install in each build environment, preserving the project's hooks.
-          CIBW_BEFORE_BUILD: ${{ inputs.pip_packages != '' && format('python -m pip install {0}', inputs.pip_packages) || '' }}
-          CIBW_INHERIT: 'before-build: append'
 
       - name: Upload wheels to GitHub
         uses: actions/upload-artifact@v4
         with:
           name: cibw-wheels-${{ matrix.buildplat }}
           path: ./wheelhouse/*.whl
-
-  test-wheels:
-    needs: [build-wheel]
-    defaults:
-        run:
-          shell: bash -l {0}
-
-    name: test-wheels-${{ matrix.python }}-${{ matrix.buildplat }}
-    runs-on: ${{ matrix.buildplat }}
-    strategy:
-      fail-fast: false
-      matrix:
-        buildplat:
-          - ubuntu-latest
-          - macos-latest
-          - macos-15-intel
-          - windows-latest
-        python: ${{ fromJSON(inputs.python_versions_json) }}
-
-    steps:
-      - name: Check out
-        uses: actions/checkout@v6
-        with:
-          submodules: ${{ inputs.submodules }}
-
-      - name: Download wheels
-        uses: actions/download-artifact@v4
-        with:
-          name: cibw-wheels-${{ matrix.buildplat }}
-          path: ./dist
-
-      - name: Initialize miniconda
-        uses: conda-incubator/setup-miniconda@v3
-        with:
-          activate-environment: test
-          channels: conda-forge
-          auto-update-conda: true
-          auto-activate-base: false
-          python-version: ${{ matrix.python }}
-
-      - name: Conda config
-        run: >-
-          conda config --set always_yes yes
-          --set changeps1 no
-
-      - name: Install requirements
-        run: |
-          conda install --file requirements/conda.txt
-          conda install --file requirements/tests.txt
-          conda install pip
-
-      # The artifact holds one wheel per Python version; install the matching one.
-      - name: Install wheel and test
-        run: |
-          py="${{ matrix.python }}"
-          pip install ./dist/*-cp${py//./}-*.whl
-          pytest
