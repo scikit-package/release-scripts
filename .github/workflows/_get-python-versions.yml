@@ -30,40 +30,68 @@ jobs:
 
       - name: Extract Python versions from pyproject.toml
         id: set-versions
+        env:
+          PYTHON_VERSIONS: ${{ inputs.python_versions }}
         run: |
-          if [ -n "${{ inputs.python_versions }}" ]; then
+          if [ -n "$PYTHON_VERSIONS" ]; then
             # Use user-provided versions if specified
-            VERSIONS="${{ inputs.python_versions }}"
+            VERSIONS=$(echo "$PYTHON_VERSIONS" | tr -d '[:space:]')
+            if [[ -z "$VERSIONS" || "$VERSIONS" =~ (^,|,,|,$) ]]; then
+              echo "Error: python_versions contains an empty version." >&2
+              exit 1
+            fi
             echo "Using user-provided Python versions: $VERSIONS"
-          else
-            # Extract versions from pyproject.toml classifiers
-            if [ -f "pyproject.toml" ]; then
-              # Extract Python version classifiers (e.g., "Programming Language :: Python :: 3.12")
-              # Using sed to handle multi-digit minor versions like 3.10, 3.11, etc.
-              VERSIONS=$(grep "Programming Language :: Python :: 3\." pyproject.toml | sed -E 's/.*Python :: (3\.[0-9]+).*/\1/' | sort -V | tr '\n' ',' | sed 's/,$//')
-
+          elif [ -f "pyproject.toml" ]; then
+            # Read requires-python only from the project table.
+            REQUIREMENT_LINE=$(awk '
+              /^[[:space:]]*\[project\][[:space:]]*(#.*)?$/ { project=1; next }
+              /^[[:space:]]*\[/ { project=0 }
+              project && /^[[:space:]]*requires-python[[:space:]]*=/ { print; exit }
+            ' pyproject.toml)
+            if [ -n "$REQUIREMENT_LINE" ]; then
+              REQUIREMENT=$(echo "$REQUIREMENT_LINE" | sed -nE \
+                -e 's/^[^=]*=[[:space:]]*"([^"]*)"[[:space:]]*(#.*)?$/\1/p' \
+                -e "s/^[^=]*=[[:space:]]*'([^']*)'[[:space:]]*(#.*)?$/\1/p")
+              RANGE='^[[:space:]]*>=[[:space:]]*3\.([0-9]+)[[:space:]]*,[[:space:]]*<[[:space:]]*3\.([0-9]+)[[:space:]]*$'
+              if [[ ! "$REQUIREMENT" =~ $RANGE ]]; then
+                echo "Error: requires-python must use >=3.x, <3.y (minor versions only)." >&2
+                exit 1
+              fi
+              MIN_MINOR=$((10#${BASH_REMATCH[1]}))
+              MAX_MINOR=$((10#${BASH_REMATCH[2]}))
+              if [ "$MIN_MINOR" -ge "$MAX_MINOR" ]; then
+                echo "Error: requires-python selects no Python versions." >&2
+                exit 1
+              fi
+              VERSIONS=$(seq "$MIN_MINOR" "$((MAX_MINOR - 1))" | sed 's/^/3./' | tr '\n' ',' | sed 's/,$//')
+              echo "Using requires-python versions: $VERSIONS"
+            else
+              # Keep the existing classifier fallback when requires-python is absent.
+              VERSIONS=$(
+                (grep -oE 'Programming Language :: Python :: 3\.[0-9]+' pyproject.toml || true) |
+                sed -E 's/.*Python :: (3\.[0-9]+).*/\1/' | sort -Vu | tr '\n' ',' | sed 's/,$//'
+              )
               if [ -z "$VERSIONS" ]; then
                 echo "Warning: No Python version classifiers found in pyproject.toml"
-                # Fallback to default versions
                 VERSIONS="3.12,3.13,3.14"
                 echo "Using fallback versions: $VERSIONS"
               else
                 echo "Extracted Python versions from pyproject.toml: $VERSIONS"
               fi
-            else
-              echo "Warning: pyproject.toml not found"
-              # Fallback to default versions
-              VERSIONS="3.12,3.13,3.14"
-              echo "Using fallback versions: $VERSIONS"
             fi
+          else
+            echo "Warning: pyproject.toml not found"
+            VERSIONS="3.12,3.13,3.14"
+            echo "Using fallback versions: $VERSIONS"
           fi
-          echo "python_versions=$VERSIONS" >> $GITHUB_OUTPUT
+          echo "python_versions=$VERSIONS" >> "$GITHUB_OUTPUT"
 
       - name: Format versions as JSON array
         id: format-json
+        env:
+          VERSIONS: ${{ steps.set-versions.outputs.python_versions }}
         run: |
-          VERSIONS="${{ steps.set-versions.outputs.python_versions }}"
           # Convert "3.9, 3.10, 3.11" to ["3.9", "3.10", "3.11"]
           JSON_ARRAY=$(echo "$VERSIONS" | sed 's/,/","/g' | sed 's/^/["/' | sed 's/$/"]/' | sed 's/ //g')
           echo "Formatted JSON array: $JSON_ARRAY"
-          echo "python_versions_json=$JSON_ARRAY" >> $GITHUB_OUTPUT
+          echo "python_versions_json=$JSON_ARRAY" >> "$GITHUB_OUTPUT"
